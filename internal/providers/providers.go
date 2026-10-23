@@ -1,5 +1,5 @@
 // Package providers is the Go port of the JS provider registry in
-// open-sse/providers/registry/*.js (9Router v0.5.104).
+// open-sse/providers/registry/*.js (ProxyGo v0.5.104).
 //
 // The data is NOT hand-written: tools/extract_registry.mjs dynamic-imports
 // every registry file in the source repo and dumps its default export to

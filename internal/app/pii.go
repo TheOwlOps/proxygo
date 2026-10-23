@@ -1,8 +1,8 @@
 package app
 
 import (
-	"9router-go/internal/chatcore"
-	"9router-go/internal/pii"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/pii"
 )
 
 // piiGuardImpl adapts internal/pii to chatcore's BodyGuard hook.

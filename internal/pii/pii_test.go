@@ -3,7 +3,7 @@ package pii_test
 import (
 	"testing"
 
-	"9router-go/internal/pii"
+	"proxygo/internal/pii"
 )
 
 func TestRedactText(t *testing.T) {

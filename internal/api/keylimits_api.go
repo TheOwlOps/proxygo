@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"9router-go/internal/db"
-	"9router-go/internal/keylimit"
+	"proxygo/internal/db"
+	"proxygo/internal/keylimit"
 )
 
 // Feature Pack F3 — per-API-key limits management:

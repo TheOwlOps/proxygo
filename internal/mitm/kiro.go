@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // Port of src/mitm/handlers/kiro.js (580 LOC) + the Kiro branch of
@@ -24,7 +24,7 @@ import (
 //
 // Flow (identical to JS): a Kiro IDE CodeWhisperer chat request whose
 // model resolves through the MITM alias map is converted to an OpenAI
-// chat request, forwarded to the 9Router gateway itself
+// chat request, forwarded to the ProxyGo gateway itself
 // (/v1/chat/completions, fetchRouter), and the OpenAI SSE reply is
 // re-encoded as AWS EventStream binary frames for the IDE. Requests
 // whose model is not in the alias map never reach this handler —

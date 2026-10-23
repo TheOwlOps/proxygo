@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"9router-go/internal/db"
-	"9router-go/internal/keylimit"
+	"proxygo/internal/db"
+	"proxygo/internal/keylimit"
 )
 
 type keyLimitsEnv struct {

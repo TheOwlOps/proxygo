@@ -61,7 +61,7 @@ documented TODO in your report — never invent a different API.
 - Team L: rewrite `internal/executors/cursor.go` (+ new files in that dir)
   and the cursor stubs in `internal/translator/stubs.go`.
 - Team M: replace kiro stubs in `internal/translator/` with the real port.
-- Team N: `cmd/9router-cli/` + `internal/cli/`.
+- Team N: `cmd/proxygo-cli/` + `internal/cli/`.
 
 ## Verification (every team)
 

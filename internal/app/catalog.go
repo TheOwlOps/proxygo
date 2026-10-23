@@ -18,8 +18,8 @@ package app
 // alternative mains may call WireCatalog again; it is idempotent.
 
 import (
-	"9router-go/internal/db"
-	"9router-go/internal/modelcatalog"
+	"proxygo/internal/db"
+	"proxygo/internal/modelcatalog"
 )
 
 // WireCatalog installs the extracted pricing catalogue into the db

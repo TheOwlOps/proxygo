@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 type ufBRewriteTransport struct {

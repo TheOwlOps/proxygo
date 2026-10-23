@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
 )
 
 const testKey = "sk-test-keylimit-0001"

@@ -177,7 +177,7 @@ func StopCallbackServer(provider string) {
 	}
 }
 
-const callbackDoneHTML = `<!doctype html><html><body style="font-family:sans-serif;text-align:center;padding-top:3rem"><h3>Login complete</h3><p>You can close this tab and return to 9Router.</p></body></html>`
+const callbackDoneHTML = `<!doctype html><html><body style="font-family:sans-serif;text-align:center;padding-top:3rem"><h3>Login complete</h3><p>You can close this tab and return to ProxyGo.</p></body></html>`
 
 func isLoopbackOrigin(origin string) bool {
 	if origin == "" {

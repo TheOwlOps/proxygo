@@ -1,8 +1,8 @@
 package app
 
 import (
-	"9router-go/internal/chatcore"
-	"9router-go/internal/rtk"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/rtk"
 )
 
 // tokenSaverImpl adapts internal/rtk (the open-sse/rtk port) to

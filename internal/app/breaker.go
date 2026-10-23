@@ -3,8 +3,8 @@ package app
 import (
 	"time"
 
-	"9router-go/internal/breaker"
-	"9router-go/internal/chatcore"
+	"proxygo/internal/breaker"
+	"proxygo/internal/chatcore"
 )
 
 // breakerAdapter exposes internal/breaker to chatcore: Allow/OnResult

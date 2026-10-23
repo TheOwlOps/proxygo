@@ -325,7 +325,7 @@ func tailOnlyCursorMessages(messages []cursorAgentMessage) []cursorAgentMessage 
 	var chatMessages []cursorAgentMessage
 	for _, m := range messages {
 		if m.Role == "system" {
-			if !strings.Contains(cursorTextFromContent(m.Content), "[9router]") {
+			if !strings.Contains(cursorTextFromContent(m.Content), "[ProxyGo]") {
 				systemMessages = append(systemMessages, m)
 			}
 			continue
@@ -349,7 +349,7 @@ func tailOnlyCursorMessages(messages []cursorAgentMessage) []cursorAgentMessage 
 	tail := chatMessages[tailStart:]
 	note := cursorAgentMessage{
 		Role:    "system",
-		Content: fmt.Sprintf("[9router] Long session: %d messages trimmed to the latest turn. Answer the current request; re-read files if needed.", len(messages)),
+		Content: fmt.Sprintf("[ProxyGo] Long session: %d messages trimmed to the latest turn. Answer the current request; re-read files if needed.", len(messages)),
 	}
 	out := append([]cursorAgentMessage{}, systemMessages...)
 	out = append(out, note)

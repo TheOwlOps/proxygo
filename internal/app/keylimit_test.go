@@ -3,8 +3,8 @@ package app
 import (
 	"testing"
 
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
 )
 
 func TestWireKeyLimiter(t *testing.T) {

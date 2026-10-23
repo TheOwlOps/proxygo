@@ -1,6 +1,6 @@
-// 9Router — Go port. Backend in Go, React dashboard served as static
+// ProxyGo — Go port. Backend in Go, React dashboard served as static
 // files (WEB_DIR). Env contract mirrors the original .env.example:
-// PORT (default 20128), DATA_DIR (else ~/.9router/), WEB_DIR,
+// PORT (default 20128), DATA_DIR (else ~/.proxygo/), WEB_DIR,
 // UPSTREAM_API_KEY / UPSTREAM_BASE_URL (optional first-run seed for an
 // "openai" connection, only when the DB has no connections yet).
 package main
@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/db"
-	"9router-go/internal/server"
+	"proxygo/internal/db"
+	"proxygo/internal/server"
 )
 
 func env(k, def string) string {
@@ -41,7 +41,7 @@ func main() {
 		Handler:           server.New(store),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-	log.Printf("9router-go listening on :%s (data dir %s)", port, store.Dir())
+	log.Printf("proxygo listening on :%s (data dir %s)", port, store.Dir())
 	log.Fatal(srv.ListenAndServe())
 }
 

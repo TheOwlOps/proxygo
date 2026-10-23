@@ -3,7 +3,7 @@ package app
 import (
 	"testing"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // Team K wiring tests: chatcore ModelMeta answers now come from the

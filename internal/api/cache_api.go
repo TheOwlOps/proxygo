@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"9router-go/internal/respcache"
+	"proxygo/internal/respcache"
 )
 
 // cache_api.go — Feature Pack F1 dashboard endpoints for the response

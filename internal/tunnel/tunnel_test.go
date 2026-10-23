@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 func TestStateRoundTrip(t *testing.T) {

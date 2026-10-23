@@ -5,7 +5,7 @@ when a feature's toggle is off, behavior must be byte-identical to today.
 
 ## Global rules
 
-- Go toolchain: `export PATH=$HOME/tools/go/bin:$PATH`. Module `9router-go`.
+- Go toolchain: `export PATH=$HOME/tools/go/bin:$PATH`. Module `proxygo`.
 - ALL features are opt-in via settings (single JSON doc in `settings(id=1)`),
   default OFF / no-op. Settings keys:
   - `responseCacheEnabled` (bool), `responseCacheTTLSeconds` (number, def 300),
@@ -38,9 +38,9 @@ when a feature's toggle is off, behavior must be byte-identical to today.
   sorts map keys).
 - Server middleware (new file `internal/server/cache_mw.go`): wraps the
   three chat POST routes. On enabled + cacheable request (POST chat
-  endpoints; skip when header `x-9router-no-cache: 1`): lookup → on hit,
+  endpoints; skip when header `x-proxygo-no-cache: 1`): lookup → on hit,
   replay stored status/headers/body bytes verbatim with header
-  `x-9router-cache: hit`. On miss: capture the response (tee) and store
+  `x-proxygo-cache: hit`. On miss: capture the response (tee) and store
   ONLY status-200 responses, after completion; works for SSE too
   (store the raw byte stream; replay verbatim). Cap stored body at 4MB.
 - Export `func CacheMiddleware(next http.Handler) http.Handler` +
@@ -112,10 +112,10 @@ when a feature's toggle is off, behavior must be byte-identical to today.
 ## F5 — Self-update (internal/selfupdate + api/auth.go + internal/cli)
 
 - `internal/selfupdate`: `Check(ctx) (Info, error)` reads a GitHub
-  Releases feed: API base overridable via env `NINEROUTER_UPDATE_API`
-  (default `https://api.github.com`), repo via `NINEROUTER_UPDATE_REPO`
-  (default `decolua/9router`). Finds asset
-  `9router-go-<GOOS>-<GOARCH>[.exe]` in the latest release; reports
+  Releases feed: API base overridable via env `PROXYGO_UPDATE_API`
+  (default `https://api.github.com`), repo via `PROXYGO_UPDATE_REPO`
+  (default `TheOwlOps/proxygo`). Finds asset
+  `proxygo-<GOOS>-<GOARCH>[.exe]` in the latest release; reports
   `Compatible:false` when absent (today's upstream releases ship no Go
   assets — the mechanism activates when a release does). Version
   compare: own semver compare (do not import internal/cli).
@@ -130,7 +130,7 @@ when a feature's toggle is off, behavior must be byte-identical to today.
   no compatible asset → keep current response shape + a clear
   `selfUpdate: "no-compatible-asset"` field. Do not break Team E's
   existing tests.
-- CLI: `9router-cli update` command in `internal/cli/update.go`
+- CLI: `proxygo-cli update` command in `internal/cli/update.go`
   (check + apply against the resolved SERVER binary path chain), plus
   one dispatch case + help line in `cli.go` (minimal, additive).
 - Tests: httptest fake GitHub API + asset + checksums; Apply against a

@@ -40,8 +40,8 @@ import (
 	"sync"
 	"time"
 
-	"9router-go/internal/db"
-	"9router-go/internal/providers"
+	"proxygo/internal/db"
+	"proxygo/internal/providers"
 )
 
 // QUOTA_AUTOPING_CONFIG (src/shared/constants/config.js).

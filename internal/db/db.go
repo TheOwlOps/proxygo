@@ -1,10 +1,10 @@
-// Package db is the Go port of src/lib/db/ (9Router v0.5.104).
+// Package db is the Go port of src/lib/db/ (ProxyGo v0.5.104).
 //
 // Storage is real SQLite via modernc.org/sqlite (pure Go, no cgo),
 // replacing the JS driver fallback chain (bun:sqlite → better-sqlite3 →
 // node:sqlite → sql.js) with a single driver. The on-disk layout matches
 // src/lib/db/paths.js: <DATA_DIR>/db/data.sqlite, where DATA_DIR comes
-// from the DATA_DIR env var, else ~/.9router/ (APPDATA/9router on Windows,
+// from the DATA_DIR env var, else ~/.proxygo/ (APPDATA/proxygo on Windows,
 // mirroring src/lib/dataDir.js).
 package db
 
@@ -82,17 +82,17 @@ func DataDir() string {
 func defaultDataDir() string {
 	if runtime.GOOS == "windows" {
 		if appData := os.Getenv("APPDATA"); appData != "" {
-			return filepath.Join(appData, "9router")
+			return filepath.Join(appData, "proxygo")
 		}
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return ".9router"
+		return ".proxygo"
 	}
 	if runtime.GOOS == "windows" {
-		return filepath.Join(home, "AppData", "Roaming", "9router")
+		return filepath.Join(home, "AppData", "Roaming", "proxygo")
 	}
-	return filepath.Join(home, ".9router")
+	return filepath.Join(home, ".proxygo")
 }
 
 // DBDir is <DATA_DIR>/db (paths.js DB_DIR).

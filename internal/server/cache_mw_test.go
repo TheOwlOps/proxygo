@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"9router-go/internal/respcache"
-	"9router-go/internal/server"
+	"proxygo/internal/respcache"
+	"proxygo/internal/server"
 )
 
 // enableRespCache points the package-level cache config at an enabled
@@ -58,8 +58,8 @@ func TestCacheMiddlewareMissStoreHit(t *testing.T) {
 	if r1.Code != 200 || calls.Load() != 1 {
 		t.Fatalf("first request: code=%d calls=%d", r1.Code, calls.Load())
 	}
-	if got := r1.Header().Get("x-9router-cache"); got != "" {
-		t.Fatalf("miss response carried x-9router-cache: %q", got)
+	if got := r1.Header().Get("x-proxygo-cache"); got != "" {
+		t.Fatalf("miss response carried x-proxygo-cache: %q", got)
 	}
 
 	// Same request, different JSON key order → same entry, byte replay.
@@ -68,8 +68,8 @@ func TestCacheMiddlewareMissStoreHit(t *testing.T) {
 	if calls.Load() != 1 {
 		t.Fatalf("second request reached upstream (calls=%d), want cache hit", calls.Load())
 	}
-	if got := r2.Header().Get("x-9router-cache"); got != "hit" {
-		t.Fatalf("x-9router-cache = %q, want hit", got)
+	if got := r2.Header().Get("x-proxygo-cache"); got != "hit" {
+		t.Fatalf("x-proxygo-cache = %q, want hit", got)
 	}
 	if r2.Code != 200 || r2.Body.String() != r1.Body.String() {
 		t.Fatalf("replay mismatch: %d %q vs %d %q", r2.Code, r2.Body.String(), r1.Code, r1.Body.String())
@@ -108,7 +108,7 @@ func TestCacheMiddlewareSSEByteReplay(t *testing.T) {
 	if calls.Load() != 1 {
 		t.Fatalf("calls = %d, want 1 (SSE response cached + replayed)", calls.Load())
 	}
-	if r2.Header().Get("x-9router-cache") != "hit" {
+	if r2.Header().Get("x-proxygo-cache") != "hit" {
 		t.Fatal("second request was not a cache hit")
 	}
 	if r2.Body.String() != r1.Body.String() {
@@ -126,11 +126,11 @@ func TestCacheMiddlewareNoCacheHeaderBypasses(t *testing.T) {
 	body := `{"model":"m","messages":[]}`
 
 	cachePost(t, h, "/v1/chat/completions", body, nil) // store
-	r := cachePost(t, h, "/v1/chat/completions", body, map[string]string{"x-9router-no-cache": "1"})
+	r := cachePost(t, h, "/v1/chat/completions", body, map[string]string{"x-proxygo-no-cache": "1"})
 	if calls.Load() != 2 {
 		t.Fatalf("calls = %d, want 2 (no-cache header must reach upstream)", calls.Load())
 	}
-	if got := r.Header().Get("x-9router-cache"); got != "" {
+	if got := r.Header().Get("x-proxygo-cache"); got != "" {
 		t.Fatalf("bypassed response marked as cache hit: %q", got)
 	}
 	// The bypassed response must not overwrite/poison the entry either:
@@ -175,7 +175,7 @@ func TestCacheMiddlewareDisabledPassthrough(t *testing.T) {
 	if calls.Load() != 2 {
 		t.Fatalf("calls = %d, want 2 while disabled", calls.Load())
 	}
-	if r1.Header().Get("x-9router-cache") != "" || r2.Header().Get("x-9router-cache") != "" {
+	if r1.Header().Get("x-proxygo-cache") != "" || r2.Header().Get("x-proxygo-cache") != "" {
 		t.Fatal("disabled cache marked a response")
 	}
 	if s := respcache.StatsSnapshot(); s.Stores != base.Stores {
@@ -200,8 +200,8 @@ func TestCacheMiddlewareAPIKeyIsolation(t *testing.T) {
 	if calls.Load() != 2 {
 		t.Fatalf("calls = %d, want 2 for a different API key", calls.Load())
 	}
-	if got := r.Header().Get("x-9router-cache"); got != "" {
-		t.Fatalf("other key's entry leaked: x-9router-cache = %q", got)
+	if got := r.Header().Get("x-proxygo-cache"); got != "" {
+		t.Fatalf("other key's entry leaked: x-proxygo-cache = %q", got)
 	}
 }
 

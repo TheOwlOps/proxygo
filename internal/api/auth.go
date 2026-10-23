@@ -21,8 +21,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/proxy"
 
-	"9router-go/internal/db"
-	"9router-go/internal/selfupdate"
+	"proxygo/internal/db"
+	"proxygo/internal/selfupdate"
 )
 
 // RegisterAuth — Team E. Ports src/app/api auth/*, settings/*, keys/*,
@@ -177,7 +177,7 @@ func recordSuccess(ip string) {
 // proves custom-server stamped it; otherwise TRUST_PROXY XFF; otherwise
 // a single shared bucket so spoofed XFF cannot escape the limiter.
 func getClientIp(r *http.Request) string {
-	if tok := os.Getenv("NINEROUTER_PEER_TOKEN"); tok != "" && r.Header.Get("x-9r-peer-token") == tok {
+	if tok := os.Getenv("PROXYGO_PEER_TOKEN"); tok != "" && r.Header.Get("x-9r-peer-token") == tok {
 		if ip := r.Header.Get("x-9r-real-ip"); ip != "" {
 			return ip
 		}
@@ -190,7 +190,7 @@ func getClientIp(r *http.Request) string {
 	return "unknown"
 }
 
-const loginResetHint = "Forgot password? Reset to default via 9Router CLI → Settings → Reset Password to Default."
+const loginResetHint = "Forgot password? Reset to default via ProxyGo CLI → Settings → Reset Password to Default."
 
 func loginLockedResponse(w http.ResponseWriter, retryAfter int) {
 	w.Header().Set("Retry-After", fmt.Sprint(retryAfter))
@@ -555,24 +555,24 @@ func applyOutboundProxyEnv(settings db.Record) {
 	noProxy := strings.TrimSpace(Str(settings, "outboundNoProxy"))
 
 	if !enabled {
-		if os.Getenv("NINE_ROUTER_PROXY_MANAGED") == "1" {
+		if os.Getenv("PROXYGO_PROXY_MANAGED") == "1" {
 			for _, k := range []string{"HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
-				"NINE_ROUTER_PROXY_MANAGED", "NINE_ROUTER_PROXY_URL", "NINE_ROUTER_NO_PROXY"} {
+				"PROXYGO_PROXY_MANAGED", "PROXYGO_PROXY_URL", "PROXYGO_NO_PROXY"} {
 				_ = os.Unsetenv(k)
 			}
 		}
 		return
 	}
-	wasManaged := os.Getenv("NINE_ROUTER_PROXY_MANAGED") == "1"
+	wasManaged := os.Getenv("PROXYGO_PROXY_MANAGED") == "1"
 	if wasManaged {
 		if proxyURL == "" {
-			for _, k := range []string{"HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NINE_ROUTER_PROXY_URL"} {
+			for _, k := range []string{"HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "PROXYGO_PROXY_URL"} {
 				_ = os.Unsetenv(k)
 			}
 		}
 		if noProxy == "" {
 			_ = os.Unsetenv("NO_PROXY")
-			_ = os.Unsetenv("NINE_ROUTER_NO_PROXY")
+			_ = os.Unsetenv("PROXYGO_NO_PROXY")
 		}
 	}
 	managed := false
@@ -581,19 +581,19 @@ func applyOutboundProxyEnv(settings db.Record) {
 			_ = os.Setenv("HTTP_PROXY", validated)
 			_ = os.Setenv("HTTPS_PROXY", validated)
 			_ = os.Setenv("ALL_PROXY", validated)
-			_ = os.Setenv("NINE_ROUTER_PROXY_URL", validated)
+			_ = os.Setenv("PROXYGO_PROXY_URL", validated)
 			managed = true
 		}
 	}
 	if noProxy != "" {
 		_ = os.Setenv("NO_PROXY", noProxy)
-		_ = os.Setenv("NINE_ROUTER_NO_PROXY", noProxy)
+		_ = os.Setenv("PROXYGO_NO_PROXY", noProxy)
 		managed = true
 	}
 	if managed {
-		_ = os.Setenv("NINE_ROUTER_PROXY_MANAGED", "1")
+		_ = os.Setenv("PROXYGO_PROXY_MANAGED", "1")
 	} else if wasManaged {
-		_ = os.Unsetenv("NINE_ROUTER_PROXY_MANAGED")
+		_ = os.Unsetenv("PROXYGO_PROXY_MANAGED")
 	}
 }
 
@@ -835,7 +835,7 @@ func settingsProxyTest(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
-	req.Header.Set("User-Agent", "9Router")
+	req.Header.Set("User-Agent", "ProxyGo")
 	start := time.Now()
 	resp, err := (&http.Client{Transport: transport}).Do(req)
 	elapsed := time.Since(start).Milliseconds()
@@ -1236,7 +1236,7 @@ func versionUpdate(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("NODE_ENV") != "production" {
 		WriteJSON(w, http.StatusForbidden, map[string]any{
 			"success": false,
-			"message": "Update is only available in production build (9router CLI)",
+			"message": "Update is only available in production build (ProxyGo CLI)",
 		})
 		return
 	}
@@ -1246,7 +1246,7 @@ func versionUpdate(w http.ResponseWriter, r *http.Request) {
 	// Go binary has no npm package, so the update channel is the
 	// project's GitHub Releases feed via internal/selfupdate: when
 	// the latest release is newer AND ships an asset for this
-	// platform (9router-go-<GOOS>-<GOARCH>[.exe], sha256-verified
+	// platform (proxygo-<GOOS>-<GOARCH>[.exe], sha256-verified
 	// against the release's checksums.txt when present), the new
 	// binary is downloaded and swapped over os.Executable(), then
 	// this process exits — the external supervisor / CLI launcher

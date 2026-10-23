@@ -3,8 +3,8 @@ package app
 import (
 	"testing"
 
-	"9router-go/internal/breaker"
-	"9router-go/internal/chatcore"
+	"proxygo/internal/breaker"
+	"proxygo/internal/chatcore"
 )
 
 func TestNewBreakerFromSettingsDisabled(t *testing.T) {

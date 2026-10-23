@@ -11,12 +11,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"9router-go/internal/api"
-	"9router-go/internal/app"
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
-	"9router-go/internal/providers"
-	"9router-go/internal/respcache"
+	"proxygo/internal/api"
+	"proxygo/internal/app"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
+	"proxygo/internal/providers"
+	"proxygo/internal/respcache"
 )
 
 // New builds the root handler.
@@ -85,7 +85,7 @@ func New(store *db.Store) http.Handler {
 		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/" {
 				writeJSON(w, http.StatusOK, map[string]any{
-					"service": "9router-go", "dashboard": "set WEB_DIR to the built React dashboard",
+					"service": "proxygo", "dashboard": "set WEB_DIR to the built React dashboard",
 					"api": "/v1",
 				})
 				return

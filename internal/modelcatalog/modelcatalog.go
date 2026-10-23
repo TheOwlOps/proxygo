@@ -20,7 +20,7 @@ import (
 	"strings"
 	"sync"
 
-	"9router-go/internal/providers"
+	"proxygo/internal/providers"
 )
 
 //go:embed catalog.json

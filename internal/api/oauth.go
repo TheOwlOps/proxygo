@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/db"
-	"9router-go/internal/oauthsvc"
+	"proxygo/internal/db"
+	"proxygo/internal/oauthsvc"
 )
 
 // RegisterOAuth wires the OAuth + SSO routes (port of src/app/api/oauth/**
@@ -1634,7 +1634,7 @@ func (deps Deps) xiaomiAutoImport(w http.ResponseWriter, r *http.Request) {
 
 // xiaomiLoginStart begins the MiMo web-login session: it walks the MiMo
 // server's /api/user/xiaomi/me entry (which redirects to Xiaomi SSO),
-// captures the cookie jar into the 9r_mimo_login session cookie, and
+// captures the cookie jar into the proxygo_mimo_login session cookie, and
 // returns the SSO page URL. NOTE: in the JS the subsequent page traffic is
 // proxied by src/proxy.js (middleware) — that proxy is outside this
 // registrar's files; the session cookie codec is fully compatible with it.
@@ -1684,7 +1684,7 @@ func xiaomiLoginStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name: "9r_mimo_login", Value: value, Path: "/",
+		Name: "proxygo_mimo_login", Value: value, Path: "/",
 		MaxAge: 15 * 60, HttpOnly: true, SameSite: http.SameSiteLaxMode,
 	})
 	WriteJSON(w, http.StatusOK, map[string]any{
@@ -1693,7 +1693,7 @@ func xiaomiLoginStart(w http.ResponseWriter, r *http.Request) {
 }
 
 func xiaomiLoginStatus(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("9r_mimo_login")
+	cookie, err := r.Cookie("proxygo_mimo_login")
 	if err != nil || cookie.Value == "" {
 		WriteJSON(w, http.StatusOK, map[string]any{"status": "pending"})
 		return
@@ -1709,7 +1709,7 @@ func xiaomiLoginStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Done — clear the session cookie like the JS does.
-	http.SetCookie(w, &http.Cookie{Name: "9r_mimo_login", Value: "", Path: "/", MaxAge: -1, HttpOnly: true})
+	http.SetCookie(w, &http.Cookie{Name: "proxygo_mimo_login", Value: "", Path: "/", MaxAge: -1, HttpOnly: true})
 	WriteJSON(w, http.StatusOK, map[string]any{
 		"status": "done", "region": sess.Region,
 		"passToken": passToken, "userId": userID, "cUserId": cUserID,

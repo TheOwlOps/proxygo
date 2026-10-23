@@ -4,7 +4,7 @@
 // Investigation result (2026-10-23, against pxpipe-proxy@0.15.0 — the
 // version `npm install pxpipe-proxy@latest` delivers):
 //
-//   - The 9Router JS server loads the package as an in-process library
+//   - The ProxyGo JS server loads the package as an in-process library
 //     (src/lib/pxpipe/loader.js imports dist/core/library.js and calls
 //     transformAnthropicMessages). A Go binary cannot do that.
 //   - BUT the package also ships a standalone server entry:

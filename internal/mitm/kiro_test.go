@@ -400,7 +400,7 @@ func TestKiroInterceptRejectsBinaryBody(t *testing.T) {
 }
 
 // Anti-loop (server.js): a request carrying x-request-source: local
-// originates from 9Router itself and must passthrough, never intercept —
+// originates from ProxyGo itself and must passthrough, never intercept —
 // even when its model would otherwise map.
 func TestKiroAntiLoopHeaderPassthrough(t *testing.T) {
 	InitDBHooks(nil, nil, func(tool string) (map[string]string, bool) {

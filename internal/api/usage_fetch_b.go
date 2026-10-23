@@ -40,9 +40,9 @@ import (
 	"time"
 	"unicode"
 
-	"9router-go/internal/db"
-	"9router-go/internal/executors"
-	"9router-go/internal/providers"
+	"proxygo/internal/db"
+	"proxygo/internal/executors"
+	"proxygo/internal/providers"
 )
 
 func init() {

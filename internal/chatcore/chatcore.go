@@ -648,7 +648,7 @@ func passthroughHeaders(h http.Header) http.Header {
 	out := http.Header{}
 	for k, vs := range h {
 		lk := strings.ToLower(k)
-		if lk == "retry-after" || strings.HasPrefix(lk, "x-ratelimit") || strings.HasPrefix(lk, "x-9router") {
+		if lk == "retry-after" || strings.HasPrefix(lk, "x-ratelimit") || strings.HasPrefix(lk, "x-proxygo") {
 			out[k] = vs
 		}
 	}

@@ -59,14 +59,14 @@ import (
 	"syscall"
 	"time"
 
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
-	"9router-go/internal/executors"
-	"9router-go/internal/mitm"
-	"9router-go/internal/providers"
-	"9router-go/internal/pxpipe"
-	"9router-go/internal/translator"
-	"9router-go/internal/tunnel"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
+	"proxygo/internal/executors"
+	"proxygo/internal/mitm"
+	"proxygo/internal/providers"
+	"proxygo/internal/pxpipe"
+	"proxygo/internal/translator"
+	"proxygo/internal/tunnel"
 )
 
 // RegisterOps mounts every Team H route.
@@ -3215,7 +3215,7 @@ func opMcpSmartFilterText(text string) string {
 	out = opMcpCollapseRepeated(out)
 	if len(out) > opMcpMaxTextChars {
 		head := out[:opMcpMaxTextChars-300]
-		out = fmt.Sprintf("%s\n\n... [truncated %d chars by 9router bridge. Page is large; ask user to scroll/navigate to a specific section, or click an element with the refs shown above]",
+		out = fmt.Sprintf("%s\n\n... [truncated %d chars by proxygo bridge. Page is large; ask user to scroll/navigate to a specific section, or click an element with the refs shown above]",
 			head, len(text)-len(head))
 	}
 	return out
@@ -3287,7 +3287,7 @@ func opMcpCollapseRepeated(text string) string {
 			for k := i; k < headEnd && k < len(lines); k++ {
 				out = append(out, lines[k])
 			}
-			out = append(out, fmt.Sprintf("%s... [%d similar %q items omitted by 9router bridge]",
+			out = append(out, fmt.Sprintf("%s... [%d similar %q items omitted by proxygo bridge]",
 				indent, groupLen-opMcpCollapseHead-opMcpCollapseTail, role))
 			for k := tailStart; k < j && k < len(lines); k++ {
 				out = append(out, lines[k])
@@ -4119,7 +4119,7 @@ func opHeadroomStart(deps Deps) http.HandlerFunc {
 		rawURL := opHrSettingsURL(deps)
 		if !opHrIsLoopback(rawURL) {
 			WriteJSON(w, http.StatusBadRequest, db.Record{
-				"error": "External Headroom proxies must be started outside 9Router",
+				"error": "External Headroom proxies must be started outside ProxyGo",
 				"code":  "EXTERNAL_PROXY",
 			})
 			return
@@ -4182,7 +4182,7 @@ func opHeadroomRestart(deps Deps) http.HandlerFunc {
 		rawURL := opHrSettingsURL(deps)
 		if !opHrIsLoopback(rawURL) {
 			WriteJSON(w, http.StatusBadRequest, db.Record{
-				"error": "External Headroom proxies must be started outside 9Router",
+				"error": "External Headroom proxies must be started outside ProxyGo",
 				"code":  "EXTERNAL_PROXY",
 			})
 			return
@@ -4550,7 +4550,7 @@ func opPxRunInstall() error {
 	_ = os.MkdirAll(opPxDir(), 0o755)
 	hostPkg := filepath.Join(opPxDir(), "package.json")
 	if _, err := os.Stat(hostPkg); err != nil {
-		_ = os.WriteFile(hostPkg, []byte("{\n  \"name\": \"9router-pxpipe-host\",\n  \"private\": true\n}\n"), 0o644)
+		_ = os.WriteFile(hostPkg, []byte("{\n  \"name\": \"proxygo-pxpipe-host\",\n  \"private\": true\n}\n"), 0o644)
 	}
 	logFile, err := os.OpenFile(opPxInstallLogFile(), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {

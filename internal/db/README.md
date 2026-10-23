@@ -17,7 +17,7 @@ gained modernc.org/sqlite and its transitive deps.
 
 Same as `src/lib/db/paths.js` + `src/lib/dataDir.js`:
 
-- `DATA_DIR` env if set, else `~/.9router/` (Windows: `%APPDATA%/9router`)
+- `DATA_DIR` env if set, else `~/.proxygo/` (Windows: `%APPDATA%/proxygo`)
 - DB file: `<DATA_DIR>/db/data.sqlite`, backups dir `<DATA_DIR>/db/backups/`
 - `Open()` resolves the env; `OpenInDir(dir)` is the explicit form (tests).
 
@@ -37,7 +37,7 @@ which is exactly what `migrations/001-initial.js` creates on a fresh DB:
   carries the full current definition (incl. the additive
   `apiKeys.accessRestricted/accessAllow` columns). Legacy JSON import
   from `migrate.js` (db.json → SQLite) is **not** ported — a JS-era
-  `~/.9router/db.json` will not be auto-imported by the Go binary.
+  `~/.proxygo/db.json` will not be auto-imported by the Go binary.
 
 ## Repos (11, named after `repos/*.js`)
 
@@ -102,7 +102,7 @@ import exactly as in JS.
 
 ```bash
 export PATH=$HOME/tools/go/bin:$PATH
-cd ~/workspace/9router-go
+cd ~/workspace/proxygo
 go vet ./internal/db/...   # OK
 go test ./internal/db/...  # 16 tests, all PASS
 ```

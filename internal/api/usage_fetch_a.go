@@ -38,7 +38,7 @@ import (
 	"sync"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 func init() {

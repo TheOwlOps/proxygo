@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/db"
-	"9router-go/internal/oauthsvc"
+	"proxygo/internal/db"
+	"proxygo/internal/oauthsvc"
 )
 
 func newOAuthTestEnv(t *testing.T) (*http.ServeMux, *db.Store) {

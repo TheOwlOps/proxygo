@@ -92,7 +92,7 @@ func TestDevinResolveWorkspaceCwd(t *testing.T) {
 	if got := devinResolveWorkspaceCwd(body); got != dir {
 		t.Fatalf("<cwd> tag = %q, want %q", got, dir)
 	}
-	if got := devinResolveWorkspaceCwd(map[string]any{"cwd": "/definitely/not/a/real/dir/9router"}); got != os.TempDir() {
+	if got := devinResolveWorkspaceCwd(map[string]any{"cwd": "/definitely/not/a/real/dir/proxygo"}); got != os.TempDir() {
 		t.Fatalf("fallback = %q, want os.TempDir()", got)
 	}
 }

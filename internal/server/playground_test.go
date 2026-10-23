@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/server"
+	"proxygo/internal/server"
 )
 
 // The playground is a self-contained page: the handler must return it
@@ -31,7 +31,7 @@ func TestPlaygroundHandler(t *testing.T) {
 	}
 	page := string(body)
 	for _, marker := range []string{
-		"9Router Playground",    // page title
+		"ProxyGo Playground",    // page title
 		"Compare mode",          // compare mode toggle
 		`id="mode-compare-btn"`, // compare toggle element
 		`id="model-a"`,          // compare picker A
@@ -40,7 +40,7 @@ func TestPlaygroundHandler(t *testing.T) {
 		"/v1/models",            // model list endpoint
 		`type="password"`,       // API key input
 		"localStorage",          // key persistence
-		"9router-playground-api-key",
+		"proxygo-playground-api-key",
 		"temperature",
 		"max_tokens",
 	} {

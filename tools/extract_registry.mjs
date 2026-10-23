@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// extract_registry.mjs — Team B, 9Router → Go port.
+// extract_registry.mjs — Team B, ProxyGo → Go port.
 //
 // Reads every provider registry file from the JS source repo
 //   ~/workspace/9router/open-sse/providers/registry/*.js

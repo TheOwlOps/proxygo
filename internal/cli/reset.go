@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // cmdResetPassword ports the JS dashboard "Reset Password to Default"
@@ -26,7 +26,7 @@ func cmdResetPassword(args []string, stdout, stderr io.Writer, stdin io.Reader) 
 		case "--yes", "-y":
 			yes = true
 		case "-h", "--help":
-			fmt.Fprintln(stdout, "Usage: 9router-cli reset-password [--yes]")
+			fmt.Fprintln(stdout, "Usage: proxygo-cli reset-password [--yes]")
 			fmt.Fprintln(stdout, "Reset the dashboard password to the default by clearing the stored hash in the local DB.")
 			return 0
 		default:
@@ -50,7 +50,7 @@ func cmdResetPassword(args []string, stdout, stderr io.Writer, stdin io.Reader) 
 func resetPasswordInDir(dir string, stdout, stderr io.Writer) int {
 	store, err := db.OpenInDir(dir)
 	if err != nil {
-		fmt.Fprintf(stderr, "Error: cannot open 9Router database in %s: %v\n", dir, err)
+		fmt.Fprintf(stderr, "Error: cannot open ProxyGo database in %s: %v\n", dir, err)
 		return 1
 	}
 	defer store.Close()

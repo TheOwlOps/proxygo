@@ -1,13 +1,13 @@
 // Package selfupdate implements real self-update for the standalone
-// 9router Go binary against GitHub Releases (Feature F5).
+// ProxyGo binary against GitHub Releases (Feature F5).
 //
 // The JS original updates by spawning an npm updater (`npm install -g
-// 9router`); a standalone Go binary has no npm package, so the update
+// proxygo`); a standalone Go binary has no npm package, so the update
 // channel is the project's GitHub Releases feed instead — the same
 // feed the CLI's update *check* already reads. A release is usable
 // only when it ships an asset named
 //
-//	9router-go-<GOOS>-<GOARCH>[.exe]
+//	proxygo-<GOOS>-<GOARCH>[.exe]
 //
 // plus, optionally, a checksums.txt whose sha256 for that asset is
 // verified before anything is swapped. Upstream releases at the time
@@ -17,8 +17,8 @@
 //
 // Configuration (env, read at call time):
 //
-//	NINEROUTER_UPDATE_API   API base, default https://api.github.com
-//	NINEROUTER_UPDATE_REPO  owner/repo, default decolua/9router
+//	PROXYGO_UPDATE_API   API base, default https://api.github.com
+//	PROXYGO_UPDATE_REPO  owner/repo, default TheOwlOps/proxygo
 package selfupdate
 
 import (
@@ -48,7 +48,7 @@ var HTTPClient = &http.Client{Timeout: 5 * time.Minute}
 
 const (
 	defaultAPIBase = "https://api.github.com"
-	defaultRepo    = "decolua/9router"
+	defaultRepo    = "TheOwlOps/proxygo"
 	maxAssetBytes  = 512 << 20 // sanity cap for a server binary download
 )
 
@@ -76,7 +76,7 @@ type Info struct {
 
 // AssetName is the platform asset file name for the running build.
 func AssetName() string {
-	name := fmt.Sprintf("9router-go-%s-%s", runtime.GOOS, runtime.GOARCH)
+	name := fmt.Sprintf("proxygo-%s-%s", runtime.GOOS, runtime.GOARCH)
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -84,14 +84,14 @@ func AssetName() string {
 }
 
 func apiBase() string {
-	if v := os.Getenv("NINEROUTER_UPDATE_API"); v != "" {
+	if v := os.Getenv("PROXYGO_UPDATE_API"); v != "" {
 		return strings.TrimRight(v, "/")
 	}
 	return defaultAPIBase
 }
 
 func repoSlug() string {
-	if v := os.Getenv("NINEROUTER_UPDATE_REPO"); v != "" {
+	if v := os.Getenv("PROXYGO_UPDATE_REPO"); v != "" {
 		return v
 	}
 	return defaultRepo
@@ -116,7 +116,7 @@ func Check(ctx context.Context) (Info, error) {
 		return Info{}, err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "9router-selfupdate/"+CurrentVersion)
+	req.Header.Set("User-Agent", "proxygo-selfupdate/"+CurrentVersion)
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
 		return Info{}, fmt.Errorf("selfupdate: fetch latest release: %w", err)
@@ -164,7 +164,7 @@ func fetchChecksum(ctx context.Context, url, assetName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("User-Agent", "9router-selfupdate/"+CurrentVersion)
+	req.Header.Set("User-Agent", "proxygo-selfupdate/"+CurrentVersion)
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("selfupdate: fetch checksums: %w", err)
@@ -212,7 +212,7 @@ func Apply(ctx context.Context, info Info, targetPath string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "9router-selfupdate/"+CurrentVersion)
+	req.Header.Set("User-Agent", "proxygo-selfupdate/"+CurrentVersion)
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("selfupdate: download asset: %w", err)
@@ -222,7 +222,7 @@ func Apply(ctx context.Context, info Info, targetPath string) error {
 		return fmt.Errorf("selfupdate: download asset: HTTP %d", resp.StatusCode)
 	}
 
-	tmp, err := os.CreateTemp(dir, ".9router-update-*")
+	tmp, err := os.CreateTemp(dir, ".proxygo-update-*")
 	if err != nil {
 		return fmt.Errorf("selfupdate: create temp file: %w", err)
 	}

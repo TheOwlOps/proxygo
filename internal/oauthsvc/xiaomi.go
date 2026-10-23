@@ -146,7 +146,7 @@ type MimoCookie struct {
 	Path   string `json:"-"`
 }
 
-// MimoLoginSession is the decoded 9r_mimo_login cookie payload.
+// MimoLoginSession is the decoded proxygo_mimo_login cookie payload.
 type MimoLoginSession struct {
 	State     string
 	Region    string

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 func ufATOverride(t *testing.T, kv map[string]string) {

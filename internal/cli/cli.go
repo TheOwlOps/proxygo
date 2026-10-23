@@ -1,17 +1,17 @@
-// Package cli is the Go port of the npm `9router` launcher
-// (~/workspace/9router/cli/cli.js + src/cli/commands).
+// Package cli is the Go port of the upstream npm launcher
+// (cli/cli.js + src/cli/commands in the upstream source tree).
 //
 // What the JS launcher does, and how the Go port maps it:
 //
 //   - JS spawns a bundled Next standalone server (app/server.js) with Node.
 //     Go adaptation: there is no bundled JS app — the launcher starts the
-//     Go server binary `9router` (see findServerBinary for the search
+//     Go server binary `proxygo` (see findServerBinary for the search
 //     order). Everything else (flags, port, data dir, dashboard URL)
 //     keeps the JS semantics.
-//   - JS kills every pre-existing 9router process and whatever listens on
+//   - JS kills every pre-existing proxygo process and whatever listens on
 //     the port before starting. Go adaptation (deliberately safer): the
 //     CLI only ever stops a server it started itself, tracked in
-//     <dataDir>/9router.pid; a foreign process on the port is reported,
+//     <dataDir>/proxygo.pid; a foreign process on the port is reported,
 //     never killed.
 //   - JS checks the npm registry for updates and can show an interactive
 //     interface menu / terminal UI after start. The Go CLI is not
@@ -45,7 +45,7 @@ import (
 const Version = "0.5.104"
 
 // AppName is pkg.name in the JS package.json.
-const AppName = "9router"
+const AppName = "proxygo"
 
 // JS launcher constants (cli.js).
 const (
@@ -75,7 +75,7 @@ func Run(args []string) int {
 
 func run(args []string, stdout, stderr io.Writer, stdin io.Reader) int {
 	if len(args) == 0 {
-		// JS: bare `9router` starts the server with default flags.
+		// JS: bare `proxygo` starts the server with default flags.
 		return cmdStart(defaultOptions(), stdout, stderr)
 	}
 
@@ -128,13 +128,13 @@ func run(args []string, stdout, stderr io.Writer, stdin io.Reader) int {
 		if len(args) > 1 && args[1] == "video" {
 			return cmdXaiVideo(args[2:], stdout, stderr)
 		}
-		fmt.Fprintln(stderr, "Usage: 9router xai video \"<prompt>\" [options]")
+		fmt.Fprintln(stderr, "Usage: proxygo xai video \"<prompt>\" [options]")
 		fmt.Fprint(stdout, xaiVideoHelp)
 		return 1
 	}
 
 	// Anything else starting with a flag is the JS launcher flow
-	// (`9router --port 8080`, `9router --tray`, …).
+	// (`proxygo --port 8080`, `proxygo --tray`, …).
 	if strings.HasPrefix(args[0], "-") {
 		opts, code, ok := parseFlags(args, stdout, stderr)
 		if !ok {
@@ -238,17 +238,17 @@ func versionParts(v string) [3]int {
 	return out
 }
 
-const helpText = `Usage: 9router-cli [command] [options]
+const helpText = `Usage: proxygo-cli [command] [options]
 
 Commands:
-  start               Start the 9Router server (default when no command)
+  start               Start the ProxyGo server (default when no command)
   stop                Stop the server started by this CLI (pid file)
   status              Show whether the server is running + health
   open                Open the dashboard in a browser
   tray                Start detached (tray GUI not ported — see notes)
-  connect <url>       Configure local CLI tools for a remote 9router server
-                      (run "9router-cli connect --help" for options)
-  show [tool…]        Show each tool's current 9router config (offline)
+  connect <url>       Configure local CLI tools for a remote proxygo server
+                      (run "proxygo-cli connect --help" for options)
+  show [tool…]        Show each tool's current proxygo config (offline)
   xai video "<prompt>"  Generate a Grok Imagine video via the local gateway
   reset-password      Reset the dashboard password to the default
                       (clears the stored hash in the local DB)
@@ -262,8 +262,8 @@ Options (start/tray; also accepted bare, like the JS launcher):
   -l, --log           Run in foreground showing server logs
   -t, --tray          Background mode (JS: system tray; Go: detached + note)
   --skip-update       Skip the update check (GitHub releases)
-  --server <path>     Path to the 9router server binary (Go addition;
-                      else $NINEROUTER_SERVER_BIN, a sibling binary,
+  --server <path>     Path to the proxygo server binary (Go addition;
+                      else $PROXYGO_SERVER_BIN, a sibling binary,
                       then PATH)
   -h, --help          Show this help message
   -v, --version       Show version

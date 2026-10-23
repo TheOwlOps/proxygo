@@ -1,7 +1,7 @@
 # Go Port — Package Contract (binding for all teams)
 
 Source of truth: `~/workspace/9router` (JS, v0.5.104 @ 87a74e1).
-Target: `~/workspace/9router-go`, module `9router-go`, Go 1.23.
+Target: `~/workspace/proxygo`, module `proxygo`, Go 1.23.
 Toolchain: `~/tools/go/bin/go` (not on PATH — export PATH=$HOME/tools/go/bin:$PATH).
 First build on this VM is slow (~80s, high load) — scope builds to your package.
 
@@ -78,7 +78,7 @@ disabledModels, nodes, pricing, proxyPools, requestDetails, settings, usage).
 - Driver: first try `go get modernc.org/sqlite` (pure Go, no cgo).
   If the download fails on this VM, fall back to a JSON-file store with the
   SAME interfaces and say so in `internal/db/README.md` — do not fake SQLite.
-- Data dir rules from `src/lib/db/paths.js`: `DATA_DIR` env, else `~/.9router/`.
+- Data dir rules from `src/lib/db/paths.js`: `DATA_DIR` env, else `~/.proxygo/`.
 - Tests: open a temp store, run migrations, CRUD round-trip per repo.
 
 ## Team D — `internal/executors/` + `internal/chatcore/`
@@ -111,7 +111,7 @@ Binary upstreams (kiro EventStream, cursor protobuf, commandcode NDJSON)
 stay inside their executor; if one cannot be fully ported, implement its
 HTTP path and mark the binary decoder TODO in the report.
 
-## Parent (integration) — `cmd/9router/`, `internal/server/`, `internal/config/`
+## Parent (integration) — `cmd/proxygo/`, `internal/server/`, `internal/config/`
 
 net/http server: `/health`, `/v1/models`, `/v1/chat/completions`,
 `/v1/messages`, `/v1/responses`, dashboard management APIs under `/api/*`

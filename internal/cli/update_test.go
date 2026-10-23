@@ -21,13 +21,13 @@ func fakeReleaseFeed(t *testing.T, tag string, assetsJSON string) {
 		fmt.Fprintf(w, `{"tag_name":%q,"assets":%s}`, tag, assetsJSON)
 	}))
 	t.Cleanup(srv.Close)
-	t.Setenv("NINEROUTER_UPDATE_API", srv.URL)
-	t.Setenv("NINEROUTER_UPDATE_REPO", "test/repo")
+	t.Setenv("PROXYGO_UPDATE_API", srv.URL)
+	t.Setenv("PROXYGO_UPDATE_REPO", "test/repo")
 }
 
 func writeFakeServerBin(t *testing.T) string {
 	t.Helper()
-	target := filepath.Join(t.TempDir(), "9router")
+	target := filepath.Join(t.TempDir(), "proxygo")
 	if err := os.WriteFile(target, []byte("bin"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestCmdUpdateNewerButNoPlatformAsset(t *testing.T) {
 	if code != 1 {
 		t.Fatalf("code = %d, stdout = %s, stderr = %s", code, out.String(), errBuf.String())
 	}
-	if !strings.Contains(errBuf.String(), "no 9router-go-") {
+	if !strings.Contains(errBuf.String(), "no proxygo-") {
 		t.Fatalf("stderr = %q", errBuf.String())
 	}
 }

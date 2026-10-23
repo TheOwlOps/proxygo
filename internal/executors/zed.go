@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"9router-go/internal/translator"
+	"proxygo/internal/translator"
 )
 
 // ZedExecutor ports open-sse/executors/zed.js (+ shared/zedAuth.js):
@@ -680,7 +680,7 @@ func (z *ZedExecutor) Execute(ctx context.Context, p *ProviderInfo, cred Credent
 	headers := map[string]string{
 		"Content-Type":             "application/json",
 		"Accept":                   "application/x-ndjson, text/event-stream, */*",
-		"User-Agent":               "9router/zed",
+		"User-Agent":               "proxygo/zed",
 		"x-zed-version":            version,
 		zedHeaderClientStatus:      "true",
 		zedHeaderClientStreamEnded: "true",

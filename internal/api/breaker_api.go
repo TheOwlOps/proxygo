@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // RegisterBreakerAPI mounts the Feature Pack F2 circuit-breaker stats

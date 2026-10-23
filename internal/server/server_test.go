@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/db"
-	"9router-go/internal/server"
+	"proxygo/internal/db"
+	"proxygo/internal/server"
 )
 
 func setup(t *testing.T, upstreamURL string) http.Handler {

@@ -160,7 +160,7 @@ func (s *Service) core(ctx context.Context, req ChatRequest, info ProviderInfo, 
 	// RTK token saver (fail-open hook; cursor's pre-translate pass is a JS
 	// special case — the hook receives the translated body here).
 	if s.TokenSaver != nil {
-		tokenSaverEnabled := !strings.EqualFold(req.Headers["x-9router-token-saver"], "off")
+		tokenSaverEnabled := !strings.EqualFold(req.Headers["x-proxygo-token-saver"], "off")
 		s.TokenSaver.Compress(translated, targetFormat, tokenSaverEnabled && settings.RTKEnabled)
 	}
 

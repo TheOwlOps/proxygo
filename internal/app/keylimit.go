@@ -1,9 +1,9 @@
 package app
 
 import (
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
-	"9router-go/internal/keylimit"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
+	"proxygo/internal/keylimit"
 )
 
 // KeyLimiterImpl builds the Feature Pack F3 per-key rate-limit /

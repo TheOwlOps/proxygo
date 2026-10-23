@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/db"
-	"9router-go/internal/respcache"
+	"proxygo/internal/db"
+	"proxygo/internal/respcache"
 )
 
 type cacheTestEnv struct {

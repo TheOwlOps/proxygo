@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// extract_provider_models.mjs — Team K, 9Router → Go port (Phase 2).
+// extract_provider_models.mjs — Team K, ProxyGo → Go port (Phase 2).
 //
 // Extracts the model catalogue + pricing data the JS runtime uses:
 //
@@ -17,7 +17,7 @@
 //      FREE_MODEL_NAMESPACES, ZERO_PRICING. This is the data behind
 //      getPricingForModel() and db pricingRepo's PROVIDER_PRICING merge.
 //
-// Output: ~/workspace/9router-go/internal/modelcatalog/catalog.json
+// Output: ~/workspace/proxygo/internal/modelcatalog/catalog.json
 // The generated file is NEVER hand-edited — re-run this script instead.
 // Per-key extraction failures are recorded under "failures" and printed,
 // never silently dropped (same convention as extract_registry.mjs).

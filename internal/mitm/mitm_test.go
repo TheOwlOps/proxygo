@@ -24,7 +24,7 @@ func TestRootCAAndLeaf(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadRootCA: %v", err)
 	}
-	if ca.cert.Subject.CommonName != "9Router MITM Root CA" {
+	if ca.cert.Subject.CommonName != "ProxyGo MITM Root CA" {
 		t.Fatalf("CA CN = %q", ca.cert.Subject.CommonName)
 	}
 	if !ca.cert.IsCA {

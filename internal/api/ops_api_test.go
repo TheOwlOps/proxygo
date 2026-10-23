@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 type opTestEnv struct {
@@ -433,7 +433,7 @@ func TestOpUsageHelpers(t *testing.T) {
 	// MCP filter: short text untouched, sibling collapse for long text
 	long := strings.Repeat("- link \"x\"\n", 40) + strings.Repeat("padding line to reach two thousand chars total in this snapshot text block. ", 40)
 	filtered := opMcpSmartFilterText(long)
-	if !strings.Contains(filtered, "items omitted by 9router bridge") {
+	if !strings.Contains(filtered, "items omitted by proxygo bridge") {
 		t.Fatalf("collapse missing: %.200s", filtered)
 	}
 	// codex window clamp

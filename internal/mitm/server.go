@@ -329,7 +329,7 @@ func (s *mitmServer) handle(w http.ResponseWriter, r *http.Request) {
 		host = h
 	}
 	body, _ := io.ReadAll(r.Body)
-	// Anti-loop (server.js): requests originating from 9Router itself
+	// Anti-loop (server.js): requests originating from ProxyGo itself
 	// carry x-request-source: local and are never intercepted.
 	if r.Header.Get("x-request-source") == "local" {
 		s.passthrough(w, r, body, host)

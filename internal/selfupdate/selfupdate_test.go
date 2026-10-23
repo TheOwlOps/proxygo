@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-var testAssetBytes = []byte("fake-new-9router-binary-bytes")
+var testAssetBytes = []byte("fake-new-proxygo-binary-bytes")
 
 func testAssetSum() string {
 	h := sha256.Sum256(testAssetBytes)
@@ -47,8 +47,8 @@ func fakeGitHub(t *testing.T, tag string, withAsset, withChecksums bool) *httpte
 	})
 	srv = httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
-	t.Setenv("NINEROUTER_UPDATE_API", srv.URL)
-	t.Setenv("NINEROUTER_UPDATE_REPO", "test/repo")
+	t.Setenv("PROXYGO_UPDATE_API", srv.URL)
+	t.Setenv("PROXYGO_UPDATE_REPO", "test/repo")
 	return srv
 }
 
@@ -112,7 +112,7 @@ func TestApplySwapsTempFile(t *testing.T) {
 	srv := fakeGitHub(t, "v0.6.0", true, true)
 	withCurrent(t, "0.5.104")
 	dir := t.TempDir()
-	target := filepath.Join(dir, "9router")
+	target := filepath.Join(dir, "proxygo")
 	if err := os.WriteFile(target, []byte("old-binary"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +145,7 @@ func TestApplySwapsTempFile(t *testing.T) {
 func TestApplyTamperedChecksumLeavesOriginal(t *testing.T) {
 	srv := fakeGitHub(t, "v0.6.0", true, false)
 	dir := t.TempDir()
-	target := filepath.Join(dir, "9router")
+	target := filepath.Join(dir, "proxygo")
 	if err := os.WriteFile(target, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}

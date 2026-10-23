@@ -14,11 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // pidState is the Go CLI's own bookkeeping for the server it started:
-// <dataDir>/9router.pid (JSON). The JS launcher tracks no pid file for
+// <dataDir>/proxygo.pid (JSON). The JS launcher tracks no pid file for
 // the main server (it kills processes by name scan instead); the pid
 // file is what lets the Go port implement stop/status safely.
 type pidState struct {
@@ -29,7 +29,7 @@ type pidState struct {
 	StartedAt string `json:"startedAt"`
 }
 
-func pidFilePath() string { return filepath.Join(db.DataDir(), "9router.pid") }
+func pidFilePath() string { return filepath.Join(db.DataDir(), "proxygo.pid") }
 
 func writePidState(st pidState) error {
 	b, err := json.MarshalIndent(st, "", "  ")
@@ -56,21 +56,21 @@ func removePidState() { _ = os.Remove(pidFilePath()) }
 // executablePath is overridable in tests.
 var executablePath = os.Executable
 
-// serverBinaryName is the Go server artifact (cmd/9router).
+// serverBinaryName is the Go server artifact (cmd/proxygo).
 func serverBinaryName() string {
 	if runtime.GOOS == "windows" {
-		return "9router.exe"
+		return "proxygo.exe"
 	}
-	return "9router"
+	return "proxygo"
 }
 
 // findServerBinary locates the Go server binary. This is the documented
 // adaptation of the JS "bundled app/server.js next to cli.js" model:
 //  1. explicit --server path
-//  2. $NINEROUTER_SERVER_BIN
-//  3. a `9router` binary next to the CLI executable
-//  4. `9router` on PATH (never the CLI executable itself)
-//  5. <dataDir>/bin/9router
+//  2. $PROXYGO_SERVER_BIN
+//  3. a `proxygo` binary next to the CLI executable
+//  4. `proxygo` on PATH (never the CLI executable itself)
+//  5. <dataDir>/bin/proxygo
 func findServerBinary(explicit string) (string, error) {
 	if explicit != "" {
 		if _, err := os.Stat(explicit); err != nil {
@@ -78,11 +78,11 @@ func findServerBinary(explicit string) (string, error) {
 		}
 		return explicit, nil
 	}
-	if env := os.Getenv("NINEROUTER_SERVER_BIN"); env != "" {
+	if env := os.Getenv("PROXYGO_SERVER_BIN"); env != "" {
 		if _, err := os.Stat(env); err == nil {
 			return env, nil
 		}
-		return "", fmt.Errorf("server binary not found at NINEROUTER_SERVER_BIN=%s", env)
+		return "", fmt.Errorf("server binary not found at PROXYGO_SERVER_BIN=%s", env)
 	}
 	name := serverBinaryName()
 	if exe, err := executablePath(); err == nil {
@@ -104,9 +104,9 @@ func findServerBinary(explicit string) (string, error) {
 	if _, err := os.Stat(candidate); err == nil {
 		return candidate, nil
 	}
-	return "", fmt.Errorf("9router server binary not found.\n" +
-		"Build it with `go build -o 9router ./cmd/9router` and place it next to " +
-		"this CLI or on PATH, set NINEROUTER_SERVER_BIN, or pass --server <path>")
+	return "", fmt.Errorf("proxygo server binary not found.\n" +
+		"Build it with `go build -o proxygo ./cmd/proxygo` and place it next to " +
+		"this CLI or on PATH, set PROXYGO_SERVER_BIN, or pass --server <path>")
 }
 
 // displayHost ports getDisplayHost in cli.js: local URL stays "localhost"
@@ -223,7 +223,7 @@ func cmdStart(opts options, stdout, stderr io.Writer) int {
 		select {
 		case v := <-updateCh:
 			if v != "" {
-				fmt.Fprintf(stdout, "⬆ A new version of 9router is available: %s (you have %s)\n", v, Version)
+				fmt.Fprintf(stdout, "⬆ A new version of proxygo is available: %s (you have %s)\n", v, Version)
 			}
 		case <-time.After(1500 * time.Millisecond):
 		}
@@ -232,9 +232,9 @@ func cmdStart(opts options, stdout, stderr io.Writer) int {
 	// Already running (started by this CLI): JS kills and restarts; the
 	// Go port reports instead — `stop` first if a restart is wanted.
 	if st, ok := readPidState(); ok && processAlive(st.PID) {
-		fmt.Fprintf(stdout, "9Router server is already running (PID %d) on port %d.\n", st.PID, st.Port)
+		fmt.Fprintf(stdout, "ProxyGo server is already running (PID %d) on port %d.\n", st.PID, st.Port)
 		fmt.Fprintf(stdout, "Dashboard: http://%s:%d/dashboard\n", displayHost(st.Host), st.Port)
-		fmt.Fprintln(stdout, "Use `9router-cli stop` first if you want to restart it.")
+		fmt.Fprintln(stdout, "Use `proxygo-cli stop` first if you want to restart it.")
 		printUpdate()
 		return 0
 	}
@@ -313,7 +313,7 @@ func cmdStart(opts options, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stdout, "✅ Server ready: http://%s:%d\n", displayHost(opts.Host), opts.Port)
 	fmt.Fprintf(stdout, "Dashboard: %s\n", dashboardURL(opts))
-	fmt.Fprintf(stdout, "Logs: %s · Stop: 9router-cli stop · Status: 9router-cli status\n", logPath)
+	fmt.Fprintf(stdout, "Logs: %s · Stop: proxygo-cli stop · Status: proxygo-cli status\n", logPath)
 	printUpdate()
 
 	if !opts.NoBrowser {
@@ -347,7 +347,7 @@ func serverEnv(opts options) []string {
 func cmdStop(stdout, stderr io.Writer) int {
 	st, ok := readPidState()
 	if !ok {
-		fmt.Fprintln(stdout, "9Router server is not running (no pid file).")
+		fmt.Fprintln(stdout, "ProxyGo server is not running (no pid file).")
 		return 0
 	}
 	if !processAlive(st.PID) {
@@ -368,7 +368,7 @@ func cmdStop(stdout, stderr io.Writer) int {
 	killByPidFile(filepath.Join(db.DataDir(), "tunnel", "cloudflared.pid"))
 	killByPidFile(filepath.Join(db.DataDir(), "tunnel", "tailscale.pid"))
 
-	fmt.Fprintf(stdout, "✅ Stopped 9Router server (PID %d).\n", st.PID)
+	fmt.Fprintf(stdout, "✅ Stopped ProxyGo server (PID %d).\n", st.PID)
 	return 0
 }
 
@@ -428,7 +428,7 @@ func cmdStatus(opts options, stdout, stderr io.Writer) int {
 		return 1
 	}
 	if healthOK(port) {
-		fmt.Fprintf(stdout, "● a 9Router server responds on port %d, but it was not started by this CLI (no pid file)\n", port)
+		fmt.Fprintf(stdout, "● a ProxyGo server responds on port %d, but it was not started by this CLI (no pid file)\n", port)
 		fmt.Fprintf(stdout, "  Dashboard: http://%s:%d/dashboard\n", displayHost(host), port)
 		return 0
 	}
@@ -470,7 +470,7 @@ func cmdOpen(opts options, stdout, stderr io.Writer) int {
 func cmdTray(opts options, stdout, stderr io.Writer) int {
 	fmt.Fprintln(stdout, "🔔 Tray mode (Go port): starting the server in the background.")
 	fmt.Fprintln(stdout, "⚠ The system-tray ICON is not ported: the JS tray is a GUI helper (systray2 on macOS/Linux, PowerShell NotifyIcon on Windows) and the Go CLI adds no GUI dependencies.")
-	fmt.Fprintln(stdout, "   Use `9router-cli status`, `9router-cli open` and `9router-cli stop` instead of the tray menu.")
+	fmt.Fprintln(stdout, "   Use `proxygo-cli status`, `proxygo-cli open` and `proxygo-cli stop` instead of the tray menu.")
 	opts.NoBrowser = true // JS tray mode does not pop a browser either
 	return cmdStart(opts, stdout, stderr)
 }

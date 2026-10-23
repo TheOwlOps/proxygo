@@ -13,12 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
-	"9router-go/internal/executors"
-	"9router-go/internal/modelcatalog"
-	"9router-go/internal/providers"
-	"9router-go/internal/translator"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
+	"proxygo/internal/executors"
+	"proxygo/internal/modelcatalog"
+	"proxygo/internal/providers"
+	"proxygo/internal/translator"
 )
 
 // ---------- helpers on db.Record ----------

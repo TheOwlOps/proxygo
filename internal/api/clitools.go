@@ -38,8 +38,8 @@ import (
 	"sync"
 	"time"
 
-	"9router-go/internal/db"
 	_ "modernc.org/sqlite" // sqlite driver for the omp agent.db best-effort write
+	"proxygo/internal/db"
 )
 
 // ---------- shared helpers ----------
@@ -213,10 +213,10 @@ func ctBodyLenient(r *http.Request) map[string]any {
 }
 
 // resolveCliApiKey ports cli-tools/resolveApiKey.js: caller key first
-// (never the "sk_9router" placeholder), else the first active dashboard
+// (never the "sk_proxygo" placeholder), else the first active dashboard
 // API key, else "".
 func resolveCliApiKey(deps Deps, caller string) string {
-	if t := strings.TrimSpace(caller); t != "" && t != "sk_9router" {
+	if t := strings.TrimSpace(caller); t != "" && t != "sk_proxygo" {
 		return t
 	}
 	if deps.Store != nil {
@@ -307,8 +307,8 @@ func tomlDelKV(kvs []tomlKV, key string) []tomlKV {
 }
 
 // tomlSetNested mirrors setNestedSection(parsed, "a.b.c", value): the
-// dotted path is ROOT key + section path — "model_providers.9router"
-// means root table model_providers → [model_providers.9router].
+// dotted path is ROOT key + section path — "model_providers.proxygo"
+// means root table model_providers → [model_providers.proxygo].
 func (d *tomlDoc) tomlSetNested(dotted string, val any) {
 	parts := strings.Split(dotted, ".")
 	if len(parts) == 1 {
@@ -689,9 +689,9 @@ func ctClaudeGET(deps Deps) http.HandlerFunc {
 			return
 		}
 		settings := ctReadJSONObjTol(ctClaudeSettingsPath())
-		has9 := false
+		hasProxyGo := false
 		if env := ctMap(settings["env"]); env != nil {
-			_, has9 = env["ANTHROPIC_BASE_URL"]
+			_, hasProxyGo = env["ANTHROPIC_BASE_URL"]
 		}
 		claudeJSON := ctReadClaudeJSON()
 		exa := false
@@ -699,7 +699,7 @@ func ctClaudeGET(deps Deps) http.HandlerFunc {
 			_, exa = cj["exa"]
 		}
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "settings": settings, "has9Router": has9,
+			"installed": true, "settings": settings, "hasProxyGo": hasProxyGo,
 			"exaMcpEnabled": exa, "settingsPath": ctClaudeSettingsPath(),
 		})
 	}
@@ -841,12 +841,12 @@ func ctCodexGET(deps Deps) http.HandlerFunc {
 		if raw, err := os.ReadFile(ctCodexConfigPath()); err == nil {
 			config = string(raw)
 		}
-		has9 := false
+		hasProxyGo := false
 		if s, ok := config.(string); ok {
-			has9 = strings.Contains(s, `model_provider = "9router"`) || strings.Contains(s, "[model_providers.9router]")
+			hasProxyGo = strings.Contains(s, `model_provider = "proxygo"`) || strings.Contains(s, "[model_providers.proxygo]")
 		}
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "config": config, "has9Router": has9, "configPath": ctCodexConfigPath(),
+			"installed": true, "config": config, "hasProxyGo": hasProxyGo, "configPath": ctCodexConfigPath(),
 		})
 	}
 }
@@ -880,10 +880,10 @@ func ctCodexPOST(deps Deps) http.HandlerFunc {
 			doc = &tomlDoc{}
 		}
 		doc.root = tomlSetKV(doc.root, "model", model)
-		doc.root = tomlSetKV(doc.root, "model_provider", "9router")
-		sec := doc.section("model_providers.9router")
+		doc.root = tomlSetKV(doc.root, "model_provider", "proxygo")
+		sec := doc.section("model_providers.proxygo")
 		sec.kvs = []tomlKV{
-			{"name", "9Router"},
+			{"name", "ProxyGo"},
 			{"base_url", ctNormalizeV1(baseUrl)},
 			{"wire_api", "responses"},
 			{"http_headers", map[string]any{"Authorization": "Bearer " + apiKey}},
@@ -918,11 +918,11 @@ func ctCodexDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset codex settings")
 			return
 		}
-		if v, ok := tomlGetKV(doc.root, "model_provider"); ok && v == "9router" {
+		if v, ok := tomlGetKV(doc.root, "model_provider"); ok && v == "proxygo" {
 			doc.root = tomlDelKV(doc.root, "model")
 			doc.root = tomlDelKV(doc.root, "model_provider")
 		}
-		doc.tomlDeleteNested("model_providers.9router")
+		doc.tomlDeleteNested("model_providers.proxygo")
 		doc.tomlDeleteNested("agents.default_subagent_model")
 		doc.tomlDeleteNested("agents.subagent")
 		if err := os.WriteFile(ctCodexConfigPath(), []byte(doc.stringify()), 0o644); err != nil {
@@ -942,7 +942,7 @@ func ctCodexDELETE(deps Deps) http.HandlerFunc {
 				}
 			}
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router settings removed successfully"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo settings removed successfully"})
 	}
 }
 
@@ -1019,7 +1019,7 @@ func ctCodexProfilesPOST(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to save profile")
 			return
 		}
-		content := "# codex -p " + cleanName + "\nmodel = \"" + cleanModel + "\"\nmodel_provider = \"9router\"\n"
+		content := "# codex -p " + cleanName + "\nmodel = \"" + cleanModel + "\"\nmodel_provider = \"proxygo\"\n"
 		if err := os.WriteFile(filepath.Join(ctCodexDir(), cleanName+".config.toml"), []byte(content), 0o644); err != nil {
 			Err(w, 500, "Failed to save profile")
 			return
@@ -1087,7 +1087,7 @@ func ctCopilotRead() []any {
 
 func ctCopilotEntry(config []any) map[string]any {
 	for _, e := range config {
-		if m := ctMap(e); m != nil && m["name"] == "9Router" {
+		if m := ctMap(e); m != nil && m["name"] == "ProxyGo" {
 			return m
 		}
 	}
@@ -1112,7 +1112,7 @@ func ctCopilotGET(deps Deps) http.HandlerFunc {
 			configVal = config
 		}
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "config": configVal, "has9Router": entry != nil,
+			"installed": true, "config": configVal, "hasProxyGo": entry != nil,
 			"configPath": ctCopilotConfigPath(), "currentModel": currentModel, "currentUrl": currentURL,
 		})
 	}
@@ -1163,11 +1163,11 @@ func ctCopilotPOST(deps Deps) http.HandlerFunc {
 			})
 		}
 		newEntry := map[string]any{
-			"name": "9Router", "vendor": "azure", "apiKey": keyToUse, "models": modelEntries,
+			"name": "ProxyGo", "vendor": "azure", "apiKey": keyToUse, "models": modelEntries,
 		}
 		replaced := false
 		for i, e := range config {
-			if m := ctMap(e); m != nil && m["name"] == "9Router" {
+			if m := ctMap(e); m != nil && m["name"] == "ProxyGo" {
 				config[i] = newEntry
 				replaced = true
 				break
@@ -1205,7 +1205,7 @@ func ctCopilotDELETE(deps Deps) http.HandlerFunc {
 		}
 		out := []any{}
 		for _, e := range config {
-			if m := ctMap(e); m != nil && m["name"] == "9Router" {
+			if m := ctMap(e); m != nil && m["name"] == "ProxyGo" {
 				continue
 			}
 			out = append(out, e)
@@ -1214,7 +1214,7 @@ func ctCopilotDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset copilot settings")
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router removed from Copilot config"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo removed from Copilot config"})
 	}
 }
 
@@ -1224,13 +1224,13 @@ func ctClineDataDir() string         { return filepath.Join(ctHome(), ".cline", 
 func ctClineGlobalStatePath() string { return filepath.Join(ctClineDataDir(), "globalState.json") }
 func ctClineSecretsPath() string     { return filepath.Join(ctClineDataDir(), "secrets.json") }
 
-func ctClineHas9(gs map[string]any) bool {
+func ctClineHasProxyGo(gs map[string]any) bool {
 	if gs == nil {
 		return false
 	}
 	isOpenAI := gs["actModeApiProvider"] == "openai" || gs["planModeApiProvider"] == "openai"
 	base := Str(gs, "openAiBaseUrl")
-	return isOpenAI && (strings.Contains(base, "localhost") || strings.Contains(base, "127.0.0.1") || strings.Contains(base, "9router"))
+	return isOpenAI && (strings.Contains(base, "localhost") || strings.Contains(base, "127.0.0.1") || strings.Contains(base, "proxygo"))
 }
 
 func ctClineGET(deps Deps) http.HandlerFunc {
@@ -1250,7 +1250,7 @@ func ctClineGET(deps Deps) http.HandlerFunc {
 			}
 		}
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "settings": settings, "has9Router": ctClineHas9(gs),
+			"installed": true, "settings": settings, "hasProxyGo": ctClineHasProxyGo(gs),
 			"globalStatePath": ctClineGlobalStatePath(),
 		})
 	}
@@ -1326,7 +1326,7 @@ func ctClineDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset cline settings")
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router settings removed from Cline"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo settings removed from Cline"})
 	}
 }
 
@@ -1338,13 +1338,13 @@ func ctKiloVscodePath() string {
 	return filepath.Join(ctHome(), ".config", "Code", "User", "settings.json")
 }
 
-func ctKiloHas9(auth map[string]any) bool {
+func ctKiloHasProxyGo(auth map[string]any) bool {
 	if auth == nil {
 		return false
 	}
 	entry := ctMap(auth["openai-compatible"])
 	if entry == nil {
-		entry = ctMap(auth["9router"])
+		entry = ctMap(auth["proxygo"])
 	}
 	if entry == nil {
 		return false
@@ -1353,7 +1353,7 @@ func ctKiloHas9(auth map[string]any) bool {
 	if base == "" {
 		base = Str(entry, "baseURL")
 	}
-	return strings.Contains(base, "localhost") || strings.Contains(base, "127.0.0.1") || strings.Contains(base, "9router")
+	return strings.Contains(base, "localhost") || strings.Contains(base, "127.0.0.1") || strings.Contains(base, "proxygo")
 }
 
 func ctKiloGET(deps Deps) http.HandlerFunc {
@@ -1377,7 +1377,7 @@ func ctKiloGET(deps Deps) http.HandlerFunc {
 		}
 		WriteJSON(w, 200, map[string]any{
 			"installed": true, "settings": map[string]any{"auth": keys},
-			"has9Router": ctKiloHas9(auth), "authPath": ctKiloAuthPath(),
+			"hasProxyGo": ctKiloHasProxyGo(auth), "authPath": ctKiloAuthPath(),
 		})
 	}
 }
@@ -1415,7 +1415,7 @@ func ctKiloPOST(deps Deps) http.HandlerFunc {
 		if vscode == nil {
 			vscode = map[string]any{}
 		}
-		vscode["kilocode.customProvider"] = map[string]any{"name": "9Router", "baseURL": normalized, "apiKey": apiKey}
+		vscode["kilocode.customProvider"] = map[string]any{"name": "ProxyGo", "baseURL": normalized, "apiKey": apiKey}
 		vscode["kilocode.defaultModel"] = model
 		_ = ctWriteJSON(ctKiloVscodePath(), vscode)
 		WriteJSON(w, 200, map[string]any{"success": true, "message": "Kilo Code settings applied successfully!", "authPath": ctKiloAuthPath()})
@@ -1430,7 +1430,7 @@ func ctKiloDELETE(deps Deps) http.HandlerFunc {
 			return
 		}
 		delete(auth, "openai-compatible")
-		delete(auth, "9router")
+		delete(auth, "proxygo")
 		if err := ctWriteJSON(ctKiloAuthPath(), auth); err != nil {
 			Err(w, 500, "Failed to reset kilo settings")
 			return
@@ -1440,7 +1440,7 @@ func ctKiloDELETE(deps Deps) http.HandlerFunc {
 			delete(vscode, "kilocode.defaultModel")
 			_ = ctWriteJSON(ctKiloVscodePath(), vscode)
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router settings removed from Kilo Code"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo settings removed from Kilo Code"})
 	}
 }
 
@@ -1461,7 +1461,7 @@ func ctOpencodeGET(deps Deps) http.HandlerFunc {
 		config := ctOpencodeRead()
 		var providerConfig map[string]any
 		if prov := ctMap(config["provider"]); prov != nil {
-			providerConfig = ctMap(prov["9router"])
+			providerConfig = ctMap(prov["proxygo"])
 		}
 		modelIDs := []string{}
 		if models := ctMap(providerConfig["models"]); models != nil {
@@ -1471,8 +1471,8 @@ func ctOpencodeGET(deps Deps) http.HandlerFunc {
 			sort.Strings(modelIDs)
 		}
 		var activeModel any
-		if m := Str(config, "model"); strings.HasPrefix(m, "9router/") {
-			activeModel = strings.TrimPrefix(m, "9router/")
+		if m := Str(config, "model"); strings.HasPrefix(m, "proxygo/") {
+			activeModel = strings.TrimPrefix(m, "proxygo/")
 		}
 		var baseURL any
 		if opts := ctMap(providerConfig["options"]); opts != nil {
@@ -1483,7 +1483,7 @@ func ctOpencodeGET(deps Deps) http.HandlerFunc {
 			modelsAny[i] = id
 		}
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "config": config, "has9Router": providerConfig != nil,
+			"installed": true, "config": config, "hasProxyGo": providerConfig != nil,
 			"configPath": ctOpencodeConfigPath(),
 			"opencode":   map[string]any{"models": modelsAny, "activeModel": activeModel, "baseURL": baseURL},
 		})
@@ -1539,7 +1539,7 @@ func ctOpencodePOST(deps Deps) http.HandlerFunc {
 			providers = map[string]any{}
 		}
 		config["provider"] = providers
-		existing := ctMap(providers["9router"])
+		existing := ctMap(providers["proxygo"])
 		if existing == nil {
 			existing = map[string]any{"npm": "@ai-sdk/openai-compatible", "options": map[string]any{}, "models": map[string]any{}}
 		}
@@ -1564,17 +1564,17 @@ func ctOpencodePOST(deps Deps) http.HandlerFunc {
 			}
 		}
 		existing["models"] = models
-		providers["9router"] = existing
+		providers["proxygo"] = existing
 		if v, present := body["activeModel"]; present {
 			if s, ok := v.(string); ok && s == "" {
 				config["model"] = ""
 			} else if ok {
-				config["model"] = "9router/" + s
+				config["model"] = "proxygo/" + s
 			} else {
-				config["model"] = "9router/" + modelsArray[0]
+				config["model"] = "proxygo/" + modelsArray[0]
 			}
 		} else {
-			config["model"] = "9router/" + modelsArray[0]
+			config["model"] = "proxygo/" + modelsArray[0]
 		}
 		agent := ctMap(config["agent"])
 		if agent == nil {
@@ -1584,7 +1584,7 @@ func ctOpencodePOST(deps Deps) http.HandlerFunc {
 		agent["explorer"] = map[string]any{
 			"description": "Fast explorer subagent for codebase exploration",
 			"mode":        "subagent",
-			"model":       "9router/" + effectiveSub,
+			"model":       "proxygo/" + effectiveSub,
 		}
 		if err := ctWriteJSON(ctOpencodeConfigPath(), config); err != nil {
 			Err(w, 500, "Failed to apply settings")
@@ -1611,7 +1611,7 @@ func ctOpencodePATCH(deps Deps) http.HandlerFunc {
 			return
 		}
 		if clear, _ := body["clearActiveModel"].(bool); clear {
-			if m := Str(config, "model"); strings.HasPrefix(m, "9router/") {
+			if m := Str(config, "model"); strings.HasPrefix(m, "proxygo/") {
 				config["model"] = ""
 			}
 		}
@@ -1638,36 +1638,36 @@ func ctOpencodeDELETE(deps Deps) http.HandlerFunc {
 		providers := ctMap(config["provider"])
 		var routerProv map[string]any
 		if providers != nil {
-			routerProv = ctMap(providers["9router"])
+			routerProv = ctMap(providers["proxygo"])
 		}
 		if modelToRemove != "" && routerProv != nil {
 			if models := ctMap(routerProv["models"]); models != nil {
 				delete(models, modelToRemove)
 				if len(models) == 0 {
-					delete(providers, "9router")
-					if m := Str(config, "model"); strings.HasPrefix(m, "9router/") {
+					delete(providers, "proxygo")
+					if m := Str(config, "model"); strings.HasPrefix(m, "proxygo/") {
 						delete(config, "model")
 					}
-				} else if Str(config, "model") == "9router/"+modelToRemove {
+				} else if Str(config, "model") == "proxygo/"+modelToRemove {
 					remaining := make([]string, 0, len(models))
 					for k := range models {
 						remaining = append(remaining, k)
 					}
 					sort.Strings(remaining)
-					config["model"] = "9router/" + remaining[0]
+					config["model"] = "proxygo/" + remaining[0]
 				}
 			}
 		} else {
 			if providers != nil {
-				delete(providers, "9router")
+				delete(providers, "proxygo")
 			}
-			if m := Str(config, "model"); strings.HasPrefix(m, "9router/") {
+			if m := Str(config, "model"); strings.HasPrefix(m, "proxygo/") {
 				delete(config, "model")
 			}
 		}
 		if agent := ctMap(config["agent"]); agent != nil {
 			if explorer := ctMap(agent["explorer"]); explorer != nil {
-				if m := Str(explorer, "model"); strings.HasPrefix(m, "9router/") {
+				if m := Str(explorer, "model"); strings.HasPrefix(m, "proxygo/") {
 					delete(agent, "explorer")
 					if len(agent) == 0 {
 						delete(config, "agent")
@@ -1679,7 +1679,7 @@ func ctOpencodeDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset opencode settings")
 			return
 		}
-		msg := "9Router settings removed from OpenCode"
+		msg := "ProxyGo settings removed from OpenCode"
 		if modelToRemove != "" {
 			msg = "Model \"" + modelToRemove + "\" removed"
 		}
@@ -1711,7 +1711,7 @@ func ctOpenclawReadAgentModel(agentDir string) any {
 		return nil
 	}
 	providers := ctMap(data["providers"])
-	rp := ctMap(providers["9router"])
+	rp := ctMap(providers["proxygo"])
 	models := ctSlice(rp["models"])
 	if len(models) == 0 {
 		return nil
@@ -1722,13 +1722,13 @@ func ctOpenclawReadAgentModel(agentDir string) any {
 	return nil
 }
 
-func ctOpenclawHas9(settings map[string]any) bool {
+func ctOpenclawHasProxyGo(settings map[string]any) bool {
 	if settings == nil {
 		return false
 	}
 	models := ctMap(settings["models"])
 	providers := ctMap(models["providers"])
-	_, ok := providers["9router"]
+	_, ok := providers["proxygo"]
 	return ok
 }
 
@@ -1763,7 +1763,7 @@ func ctOpenclawGET(deps Deps) http.HandlerFunc {
 		}
 		WriteJSON(w, 200, map[string]any{
 			"installed": true, "settings": settings, "agents": agents,
-			"has9Router": ctOpenclawHas9(settings), "settingsPath": ctOpenclawPath(),
+			"hasProxyGo": ctOpenclawHasProxyGo(settings), "settingsPath": ctOpenclawPath(),
 		})
 	}
 }
@@ -1790,7 +1790,7 @@ func ctOpenclawWriteAgentModels(agentDir, model, baseUrl string, apiKey any) {
 	if name == "" {
 		name = model
 	}
-	providers["9router"] = map[string]any{
+	providers["proxygo"] = map[string]any{
 		"baseUrl": baseUrl, "apiKey": apiKey, "api": "openai-completions",
 		"models": []any{map[string]any{"id": model, "name": name}},
 	}
@@ -1854,9 +1854,9 @@ func ctOpenclawPOST(deps Deps) http.HandlerFunc {
 		modelsCfg["providers"] = providers
 
 		normalized := ctNormalizeV1(baseUrl)
-		fullModelID := "9router/" + model
+		fullModelID := "proxygo/" + model
 		for k := range defModels {
-			if strings.HasPrefix(k, "9router/") {
+			if strings.HasPrefix(k, "proxygo/") {
 				delete(defModels, k)
 			}
 		}
@@ -1870,9 +1870,9 @@ func ctOpenclawPOST(deps Deps) http.HandlerFunc {
 			}
 		}
 		for _, m := range allIDs {
-			defModels["9router/"+m] = map[string]any{}
+			defModels["proxygo/"+m] = map[string]any{}
 		}
-		// Strip 9router model from agents that have one, then re-apply overrides.
+		// Strip proxygo model from agents that have one, then re-apply overrides.
 		applyList := func(list []any) []any {
 			out := []any{}
 			for _, item := range list {
@@ -1881,7 +1881,7 @@ func ctOpenclawPOST(deps Deps) http.HandlerFunc {
 					out = append(out, item)
 					continue
 				}
-				if strings.HasPrefix(ctResolveAgentModel(agent["model"]), "9router/") {
+				if strings.HasPrefix(ctResolveAgentModel(agent["model"]), "proxygo/") {
 					na := map[string]any{}
 					for k, v := range agent {
 						if k != "model" {
@@ -1908,7 +1908,7 @@ func ctOpenclawPOST(deps Deps) http.HandlerFunc {
 			}
 			modelEntries = append(modelEntries, map[string]any{"id": m, "name": name})
 		}
-		providers["9router"] = map[string]any{
+		providers["proxygo"] = map[string]any{
 			"baseUrl": normalized, "apiKey": apiKey, "api": "openai-completions", "models": modelEntries,
 		}
 		if list := ctSlice(agents["list"]); list != nil {
@@ -1924,7 +1924,7 @@ func ctOpenclawPOST(deps Deps) http.HandlerFunc {
 					for k, v := range agent {
 						na[k] = v
 					}
-					na["model"] = "9router/" + am
+					na["model"] = "proxygo/" + am
 					agent = na
 				}
 				newList = append(newList, agent)
@@ -1967,7 +1967,7 @@ func ctOpenclawDELETE(deps Deps) http.HandlerFunc {
 		}
 		if modelsCfg := ctMap(settings["models"]); modelsCfg != nil {
 			if providers := ctMap(modelsCfg["providers"]); providers != nil {
-				delete(providers, "9router")
+				delete(providers, "proxygo")
 				if len(providers) == 0 {
 					delete(modelsCfg, "providers")
 				}
@@ -1977,7 +1977,7 @@ func ctOpenclawDELETE(deps Deps) http.HandlerFunc {
 			if defaults := ctMap(agents["defaults"]); defaults != nil {
 				if dm := ctMap(defaults["models"]); dm != nil {
 					for k := range dm {
-						if strings.HasPrefix(k, "9router/") {
+						if strings.HasPrefix(k, "proxygo/") {
 							delete(dm, k)
 						}
 					}
@@ -1986,7 +1986,7 @@ func ctOpenclawDELETE(deps Deps) http.HandlerFunc {
 					}
 				}
 				if defModel := ctMap(defaults["model"]); defModel != nil {
-					if p := Str(defModel, "primary"); strings.HasPrefix(p, "9router/") {
+					if p := Str(defModel, "primary"); strings.HasPrefix(p, "proxygo/") {
 						delete(defModel, "primary")
 					}
 				}
@@ -1996,7 +1996,7 @@ func ctOpenclawDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset openclaw settings")
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router settings removed successfully"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo settings removed successfully"})
 	}
 }
 
@@ -2014,10 +2014,10 @@ func ctDroidCustomModels(settings map[string]any) []any {
 
 func ctDroidIs9(m any) bool {
 	mm := ctMap(m)
-	return mm != nil && strings.HasPrefix(Str(mm, "id"), "custom:9Router")
+	return mm != nil && strings.HasPrefix(Str(mm, "id"), "custom:ProxyGo")
 }
 
-func ctDroidHas9(settings map[string]any) bool {
+func ctDroidHasProxyGo(settings map[string]any) bool {
 	for _, m := range ctDroidCustomModels(settings) {
 		if ctDroidIs9(m) {
 			return true
@@ -2035,7 +2035,7 @@ func ctDroidGET(deps Deps) http.HandlerFunc {
 		}
 		settings := ctReadJSONObjTol(ctDroidPath())
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "settings": settings, "has9Router": ctDroidHas9(settings), "settingsPath": ctDroidPath(),
+			"installed": true, "settings": settings, "hasProxyGo": ctDroidHasProxyGo(settings), "settingsPath": ctDroidPath(),
 		})
 	}
 }
@@ -2094,7 +2094,7 @@ func ctDroidPOST(deps Deps) http.HandlerFunc {
 				continue
 			}
 			entries = append(entries, map[string]any{
-				"model": m, "id": "custom:9Router-" + strconv.Itoa(i), "index": i,
+				"model": m, "id": "custom:ProxyGo-" + strconv.Itoa(i), "index": i,
 				"baseUrl": normalized, "apiKey": keyToUse, "displayName": m,
 				"maxOutputTokens": 131072, "noImageSupport": false, "provider": "openai",
 			})
@@ -2156,7 +2156,7 @@ func ctDroidDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset droid settings")
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router settings removed successfully"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo settings removed successfully"})
 	}
 }
 
@@ -2169,7 +2169,7 @@ func ctJcodeEnvPath() string {
 	if configDir == "" {
 		configDir = filepath.Join(ctHome(), ".config")
 	}
-	return filepath.Join(configDir, "jcode", "provider-9router.env")
+	return filepath.Join(configDir, "jcode", "provider-proxygo.env")
 }
 
 func ctJcodeReadConfig() *tomlDoc {
@@ -2188,13 +2188,13 @@ func ctJcodeReadConfig() *tomlDoc {
 	return d
 }
 
-func ctJcodeHas9(d *tomlDoc) bool {
+func ctJcodeHasProxyGo(d *tomlDoc) bool {
 	m := d.toMap()
 	providers := ctMap(m["providers"])
 	if providers == nil {
 		return false
 	}
-	if _, ok := providers["9router"]; ok {
+	if _, ok := providers["proxygo"]; ok {
 		return true
 	}
 	for _, v := range providers {
@@ -2255,7 +2255,7 @@ func ctJcodeGET(deps Deps) http.HandlerFunc {
 		}
 		config := ctJcodeReadConfig()
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "config": config.toMap(), "has9Router": ctJcodeHas9(config), "configPath": ctJcodePath(),
+			"installed": true, "config": config.toMap(), "hasProxyGo": ctJcodeHasProxyGo(config), "configPath": ctJcodePath(),
 		})
 	}
 }
@@ -2274,7 +2274,7 @@ func ctJcodePOST(deps Deps) http.HandlerFunc {
 		}
 		normalized := ctNormalizeV1(baseUrl)
 		config := ctJcodeReadConfig()
-		sec := config.section("providers.9router")
+		sec := config.section("providers.proxygo")
 		defModel := "cc/claude-opus-4-7"
 		if models := ctSlice(body["models"]); len(models) > 0 {
 			if s, ok := models[0].(string); ok && s != "" {
@@ -2285,8 +2285,8 @@ func ctJcodePOST(deps Deps) http.HandlerFunc {
 			{"type", "openai-compatible"},
 			{"base_url", normalized},
 			{"auth", "bearer"},
-			{"api_key_env", "JCODE_9ROUTER_API_KEY"},
-			{"env_file", "provider-9router.env"},
+			{"api_key_env", "JCODE_PROXYGO_API_KEY"},
+			{"env_file", "provider-proxygo.env"},
 			{"default_model", defModel},
 			{"requires_api_key", true},
 		}
@@ -2304,13 +2304,13 @@ func ctJcodePOST(deps Deps) http.HandlerFunc {
 			return
 		}
 		env := ctJcodeReadEnv()
-		env["JCODE_9ROUTER_API_KEY"] = apiKey
+		env["JCODE_PROXYGO_API_KEY"] = apiKey
 		if err := ctJcodeWriteEnv(env); err != nil {
 			Err(w, 500, err.Error())
 			return
 		}
 		WriteJSON(w, 200, map[string]any{
-			"success": true, "message": "jcode configured successfully. Use: jcode --provider-profile 9router", "configPath": ctJcodePath(),
+			"success": true, "message": "jcode configured successfully. Use: jcode --provider-profile proxygo", "configPath": ctJcodePath(),
 		})
 	}
 }
@@ -2323,10 +2323,10 @@ func ctJcodeDELETE(deps Deps) http.HandlerFunc {
 			WriteJSON(w, 200, map[string]any{"success": true, "message": "No configuration to remove"})
 			return
 		}
-		// delete config.providers["9router"] → section providers.9router
+		// delete config.providers["proxygo"] → section providers.proxygo
 		out := config.sections[:0]
 		for _, s := range config.sections {
-			if s.name != "providers.9router" {
+			if s.name != "providers.proxygo" {
 				out = append(out, s)
 			}
 		}
@@ -2336,12 +2336,12 @@ func ctJcodeDELETE(deps Deps) http.HandlerFunc {
 			return
 		}
 		env := ctJcodeReadEnv()
-		delete(env, "JCODE_9ROUTER_API_KEY")
+		delete(env, "JCODE_PROXYGO_API_KEY")
 		if err := ctJcodeWriteEnv(env); err != nil {
 			Err(w, 500, err.Error())
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9router configuration removed from jcode"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "proxygo configuration removed from jcode"})
 	}
 }
 
@@ -2360,7 +2360,7 @@ func ctPiResolvePath() string {
 	return ctPiAgentPath()
 }
 
-func ctPiHas9(settings map[string]any) bool {
+func ctPiHasProxyGo(settings map[string]any) bool {
 	if settings == nil {
 		return false
 	}
@@ -2368,7 +2368,7 @@ func ctPiHas9(settings map[string]any) bool {
 	if providers == nil {
 		return false
 	}
-	if p := ctMap(providers["9router"]); p != nil && Str(p, "baseUrl") != "" {
+	if p := ctMap(providers["proxygo"]); p != nil && Str(p, "baseUrl") != "" {
 		return true
 	}
 	for _, v := range providers {
@@ -2388,7 +2388,7 @@ func ctPiGET(deps Deps) http.HandlerFunc {
 		}
 		config := ctReadJSONObjTol(ctPiResolvePath())
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "config": config, "has9Router": ctPiHas9(config), "configPath": ctPiResolvePath(),
+			"installed": true, "config": config, "hasProxyGo": ctPiHasProxyGo(config), "configPath": ctPiResolvePath(),
 		})
 	}
 }
@@ -2433,7 +2433,7 @@ func ctPiPOST(deps Deps) http.HandlerFunc {
 			providers = map[string]any{}
 		}
 		existing["providers"] = providers
-		existingProvider := ctMap(providers["9router"])
+		existingProvider := ctMap(providers["proxygo"])
 		normalized := ctNormalizeV1(baseUrl)
 		modelList := []any{}
 		if models := ctSlice(body["models"]); len(models) > 0 {
@@ -2479,13 +2479,13 @@ func ctPiPOST(deps Deps) http.HandlerFunc {
 		newProv["apiKey"] = resolveCliApiKey(deps, Str(body, "apiKey"))
 		newProv["api"] = api
 		newProv["models"] = modelList
-		providers["9router"] = newProv
+		providers["proxygo"] = newProv
 		if err := ctWriteJSON(configPath, existing); err != nil {
 			ctErrObj(w, 500, err.Error())
 			return
 		}
 		WriteJSON(w, 200, map[string]any{
-			"success": true, "message": "Pi settings applied! Use /model in Pi to select the 9Router model.", "configPath": configPath,
+			"success": true, "message": "Pi settings applied! Use /model in Pi to select the ProxyGo model.", "configPath": configPath,
 		})
 	}
 }
@@ -2504,8 +2504,8 @@ func ctPiDELETE(deps Deps) http.HandlerFunc {
 			return
 		}
 		if providers := ctMap(existing["providers"]); providers != nil {
-			if _, ok := providers["9router"]; ok {
-				delete(providers, "9router")
+			if _, ok := providers["proxygo"]; ok {
+				delete(providers, "proxygo")
 				if len(providers) == 0 {
 					delete(existing, "providers")
 				}
@@ -2515,7 +2515,7 @@ func ctPiDELETE(deps Deps) http.HandlerFunc {
 				}
 			}
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router removed from Pi"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo removed from Pi"})
 	}
 }
 
@@ -2552,7 +2552,7 @@ func ctCrushConfigPath() string {
 	return filepath.Join(configDir, "crush", "crush.json")
 }
 
-func ctCrushHas9(settings map[string]any) bool {
+func ctCrushHasProxyGo(settings map[string]any) bool {
 	if settings == nil {
 		return false
 	}
@@ -2560,7 +2560,7 @@ func ctCrushHas9(settings map[string]any) bool {
 	if providers == nil {
 		return false
 	}
-	if p := ctMap(providers["9router"]); p != nil && Str(p, "base_url") != "" {
+	if p := ctMap(providers["proxygo"]); p != nil && Str(p, "base_url") != "" {
 		return true
 	}
 	for _, v := range providers {
@@ -2580,7 +2580,7 @@ func ctCrushGET(deps Deps) http.HandlerFunc {
 		}
 		config := ctReadJSONObjTol(ctCrushConfigPath())
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "config": config, "has9Router": ctCrushHas9(config), "configPath": ctCrushConfigPath(),
+			"installed": true, "config": config, "hasProxyGo": ctCrushHasProxyGo(config), "configPath": ctCrushConfigPath(),
 		})
 	}
 }
@@ -2617,7 +2617,7 @@ func ctCrushPOST(deps Deps) http.HandlerFunc {
 		if modelID == "" {
 			modelID = "provider/model-id"
 		}
-		providers["9router"] = map[string]any{
+		providers["proxygo"] = map[string]any{
 			"type": "openai-compat", "base_url": ctNormalizeV1(baseUrl),
 			"api_key": resolveCliApiKey(deps, Str(body, "apiKey")),
 			"models":  []any{map[string]any{"id": modelID, "name": modelID, "context_window": 128000}},
@@ -2644,8 +2644,8 @@ func ctCrushDELETE(deps Deps) http.HandlerFunc {
 			return
 		}
 		if providers := ctMap(existing["providers"]); providers != nil {
-			if _, ok := providers["9router"]; ok {
-				delete(providers, "9router")
+			if _, ok := providers["proxygo"]; ok {
+				delete(providers, "proxygo")
 				if len(providers) == 0 {
 					delete(existing, "providers")
 				}
@@ -2655,7 +2655,7 @@ func ctCrushDELETE(deps Deps) http.HandlerFunc {
 				}
 			}
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router removed from Crush"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo removed from Crush"})
 	}
 }
 
@@ -2694,7 +2694,7 @@ func ctDeepseekParseToml(content string) map[string]any {
 	return result
 }
 
-func ctDeepseekHas9(config map[string]any) bool {
+func ctDeepseekHasProxyGo(config map[string]any) bool {
 	if config == nil || config["provider"] != "openai" {
 		return false
 	}
@@ -2718,7 +2718,7 @@ func ctDeepseekGET(deps Deps) http.HandlerFunc {
 		}
 		config := ctDeepseekParseToml(toml)
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "settings": config, "has9Router": ctDeepseekHas9(config), "configPath": ctDeepseekPath(),
+			"installed": true, "settings": config, "hasProxyGo": ctDeepseekHasProxyGo(config), "configPath": ctDeepseekPath(),
 		})
 	}
 }
@@ -2759,7 +2759,7 @@ func ctDeepseekDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset deepseek-tui settings")
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9router config reset to DeepSeek defaults"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "proxygo config reset to DeepSeek defaults"})
 	}
 }
 
@@ -2769,17 +2769,17 @@ func ctOmpDir() string        { return filepath.Join(ctHome(), ".omp", "agent") 
 func ctOmpDbPath() string     { return filepath.Join(ctOmpDir(), "agent.db") }
 func ctOmpModelsPath() string { return filepath.Join(ctOmpDir(), "models.yml") }
 
-var ctOmpBlockRe = regexp.MustCompile(`(?s)\s*9router:.*?(?:\n\s*\w+:|\z)`)
+var ctOmpBlockRe = regexp.MustCompile(`(?s)\s*proxygo:.*?(?:\n\s*\w+:|\z)`)
 
 func ctOmpRemoveBlock(content string) string {
-	// JS: /\s*9router:[\s\S]*?(?=\n\s*\w+:|$)/g — emulate with a scanner:
-	// find each "9router:" at a word position preceded by whitespace/newline,
+	// JS: /\s*proxygo:[\s\S]*?(?=\n\s*\w+:|$)/g — emulate with a scanner:
+	// find each "proxygo:" at a word position preceded by whitespace/newline,
 	// cut until the next "\n<spaces><word>:" or EOF.
 	for {
 		idx := -1
 		search := 0
 		for search < len(content) {
-			j := strings.Index(content[search:], "9router:")
+			j := strings.Index(content[search:], "proxygo:")
 			if j < 0 {
 				break
 			}
@@ -2805,10 +2805,10 @@ func ctOmpRemoveBlock(content string) string {
 		}
 		// end: next \n\s*\w+: after idx
 		end := len(content)
-		rest := content[idx+len("9router:"):]
+		rest := content[idx+len("proxygo:"):]
 		re := regexp.MustCompile(`\n[ \t]*\w+:`)
 		if loc := re.FindStringIndex(rest); loc != nil {
-			end = idx + len("9router:") + loc[0]
+			end = idx + len("proxygo:") + loc[0]
 		}
 		content = content[:start] + content[end:]
 	}
@@ -2825,13 +2825,13 @@ func ctOmpGET(deps Deps) http.HandlerFunc {
 		if raw, err := os.ReadFile(ctOmpModelsPath()); err == nil {
 			yml = string(raw)
 		}
-		has9 := yml != "" && (strings.Contains(yml, "9router:") || strings.Contains(yml, "localhost:20128"))
-		WriteJSON(w, 200, map[string]any{"installed": true, "has9Router": has9, "configPath": ctOmpModelsPath()})
+		hasProxyGo := yml != "" && (strings.Contains(yml, "proxygo:") || strings.Contains(yml, "localhost:20128"))
+		WriteJSON(w, 200, map[string]any{"installed": true, "hasProxyGo": hasProxyGo, "configPath": ctOmpModelsPath()})
 	}
 }
 
 func ctOmpBuildBlock(baseUrl, apiKey string) string {
-	return "  9router:\n    baseUrl: " + ctNormalizeV1(baseUrl) + "\n    apiKey: " + apiKey + "\n    api: openai-completions\n    authHeader: true\n    disableStrictTools: true\n    discovery:\n      type: proxy"
+	return "  proxygo:\n    baseUrl: " + ctNormalizeV1(baseUrl) + "\n    apiKey: " + apiKey + "\n    api: openai-completions\n    authHeader: true\n    disableStrictTools: true\n    discovery:\n      type: proxy"
 }
 
 func ctOmpPOST(deps Deps) http.HandlerFunc {
@@ -2871,7 +2871,7 @@ func ctOmpPOST(deps Deps) http.HandlerFunc {
 		ctOmpUpdateDB(resolvedKey, baseUrl)
 		WriteJSON(w, 200, map[string]any{
 			"success":    true,
-			"message":    "Oh My Pi settings applied! Run 'omp' and all 9Router models appear under 9router in /model.",
+			"message":    "Oh My Pi settings applied! Run 'omp' and all ProxyGo models appear under proxygo in /model.",
 			"configPath": ctOmpModelsPath(),
 		})
 	}
@@ -2892,9 +2892,9 @@ func ctOmpUpdateDB(apiKey, baseUrl string) {
 	defer sqlDB.Close()
 	now := time.Now().Unix()
 	data, _ := json.Marshal(map[string]any{"apiKey": apiKey, "baseUrl": baseUrl})
-	_, _ = sqlDB.Exec("DELETE FROM auth_credentials WHERE provider = ?", "9router")
+	_, _ = sqlDB.Exec("DELETE FROM auth_credentials WHERE provider = ?", "proxygo")
 	_, _ = sqlDB.Exec("INSERT INTO auth_credentials (provider, credential_type, data, disabled_cause, identity_key, created_at, updated_at) VALUES (?, ?, ?, NULL, NULL, ?, ?)",
-		"9router", "api_key", string(data), now, now)
+		"proxygo", "api_key", string(data), now, now)
 }
 
 func ctOmpDELETE(deps Deps) http.HandlerFunc {
@@ -2912,7 +2912,7 @@ func ctOmpDELETE(deps Deps) http.HandlerFunc {
 				return
 			}
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9Router removed from Oh My Pi"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "ProxyGo removed from Oh My Pi"})
 	}
 }
 
@@ -2935,8 +2935,8 @@ func ctTomlToolGET(deps Deps, tool, display, cmd string, dirFn, pathFn func() st
 				config = doc.toMap()
 			}
 		}
-		has9 := strings.Contains(content, "managed by 9Router") || strings.Contains(content, "localhost:20128")
-		WriteJSON(w, 200, map[string]any{"installed": true, "config": config, "has9Router": has9, "configPath": pathFn()})
+		hasProxyGo := strings.Contains(content, "managed by ProxyGo") || strings.Contains(content, "localhost:20128")
+		WriteJSON(w, 200, map[string]any{"installed": true, "config": config, "hasProxyGo": hasProxyGo, "configPath": pathFn()})
 	}
 }
 
@@ -3018,19 +3018,19 @@ func ctForgeGET(deps Deps) http.HandlerFunc {
 	return ctTomlToolGET(deps, "forge", "ForgeCode", "forge", ctForgeDir, ctForgePath)
 }
 func ctForgePOST(deps Deps) http.HandlerFunc {
-	return ctTomlToolPOST(deps, "# Forge config — managed by 9Router\n\n", ctForgeDir, ctForgePath, true, "ForgeCode settings applied successfully!")
+	return ctTomlToolPOST(deps, "# Forge config — managed by ProxyGo\n\n", ctForgeDir, ctForgePath, true, "ForgeCode settings applied successfully!")
 }
 func ctForgeDELETE(deps Deps) http.HandlerFunc {
-	return ctTomlToolDELETE(deps, ctForgePath, "9Router removed from ForgeCode")
+	return ctTomlToolDELETE(deps, ctForgePath, "ProxyGo removed from ForgeCode")
 }
 func ctCodewhaleGET(deps Deps) http.HandlerFunc {
 	return ctTomlToolGET(deps, "codewhale", "CodeWhale", "codewhale", ctCodewhaleDir, ctCodewhalePath)
 }
 func ctCodewhalePOST(deps Deps) http.HandlerFunc {
-	return ctTomlToolPOST(deps, "# CodeWhale config — managed by 9Router\n\n", ctCodewhaleDir, ctCodewhalePath, false, "CodeWhale settings applied successfully!")
+	return ctTomlToolPOST(deps, "# CodeWhale config — managed by ProxyGo\n\n", ctCodewhaleDir, ctCodewhalePath, false, "CodeWhale settings applied successfully!")
 }
 func ctCodewhaleDELETE(deps Deps) http.HandlerFunc {
-	return ctTomlToolDELETE(deps, ctCodewhalePath, "9Router removed from CodeWhale")
+	return ctTomlToolDELETE(deps, ctCodewhalePath, "ProxyGo removed from CodeWhale")
 }
 
 func ctForgeDir() string      { return filepath.Join(ctHome(), ".forge") }
@@ -3041,11 +3041,11 @@ func ctSmeltPath() string     { return filepath.Join(ctHome(), ".smelt", "config
 
 // ---------- smelt-settings (~/.smelt/config.json) ----------
 
-func ctSmeltHas9(settings map[string]any) bool {
+func ctSmeltHasProxyGo(settings map[string]any) bool {
 	if settings == nil {
 		return false
 	}
-	if settings["_managedBy"] == "9router" {
+	if settings["_managedBy"] == "proxygo" {
 		return true
 	}
 	base := Str(settings, "baseUrl")
@@ -3061,7 +3061,7 @@ func ctSmeltGET(deps Deps) http.HandlerFunc {
 		}
 		config := ctReadJSONObjTol(ctSmeltPath())
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "config": config, "has9Router": ctSmeltHas9(config), "configPath": ctSmeltPath(),
+			"installed": true, "config": config, "hasProxyGo": ctSmeltHasProxyGo(config), "configPath": ctSmeltPath(),
 		})
 	}
 }
@@ -3099,7 +3099,7 @@ func ctSmeltPOST(deps Deps) http.HandlerFunc {
 		existing["baseUrl"] = ctNormalizeV1(baseUrl)
 		existing["apiKey"] = resolveCliApiKey(deps, Str(body, "apiKey"))
 		existing["model"] = model
-		existing["_managedBy"] = "9router"
+		existing["_managedBy"] = "proxygo"
 		if err := ctWriteJSON(configPath, existing); err != nil {
 			ctErrObj(w, 500, err.Error())
 			return
@@ -3131,7 +3131,7 @@ func ctSmeltDELETE(deps Deps) http.HandlerFunc {
 			ctErrObj(w, 500, err.Error())
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "Smelt 9Router settings removed"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "Smelt ProxyGo settings removed"})
 	}
 }
 
@@ -3205,9 +3205,9 @@ func ctGrokPath() string { return filepath.Join(ctGrokDir(), "config.toml") }
 
 var ctGrokSubagentTypes = []string{"general-purpose", "explore", "plan"}
 
-const ctGrokMainSlot = "9router"
+const ctGrokMainSlot = "proxygo"
 const ctGrokBuiltinDefault = "grok-build"
-const ctGrokUnsetSentinel = "__9router_unset__"
+const ctGrokUnsetSentinel = "__proxygo_unset__"
 
 // GrokContextWindow resolves a model's context window when the caller
 // gives no explicit value. JS uses getCapabilitiesForModel (Team K's
@@ -3369,7 +3369,7 @@ func grokBuildModelSection(slot, model, baseUrl, apiKey string, contextWindow fl
 		"model = " + grokTomlString(model),
 		"base_url = " + grokTomlString(baseUrl),
 		"name = " + grokTomlString(name),
-		"description = " + grokTomlString("Routed via 9Router gateway"),
+		"description = " + grokTomlString("Routed via ProxyGo gateway"),
 		`api_backend = "chat_completions"`,
 	}
 	if apiKey != "" {
@@ -3419,10 +3419,10 @@ func grokInsertMarker(toml, marker string) string {
 	return prefix + marker
 }
 
-var ctGrokPrevDefaultRe = regexp.MustCompile(`(?m)^# 9router-prev-default = "([^"]*)"[ \t]*\r?\n?`)
+var ctGrokPrevDefaultRe = regexp.MustCompile(`(?m)^# proxygo-prev-default = "([^"]*)"[ \t]*\r?\n?`)
 
 func grokPrevSubagentRe(t string) *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^# 9router-prev-subagent-` + regexp.QuoteMeta(t) + ` = "([^"]*)"[ \t]*\r?\n?`)
+	return regexp.MustCompile(`(?m)^# proxygo-prev-subagent-` + regexp.QuoteMeta(t) + ` = "([^"]*)"[ \t]*\r?\n?`)
 }
 
 func grokRememberPreviousDefault(toml string) string {
@@ -3433,7 +3433,7 @@ func grokRememberPreviousDefault(toml string) string {
 	if !ok || current == "" || current == ctGrokMainSlot {
 		return toml
 	}
-	return grokInsertMarker(toml, "# 9router-prev-default = "+grokTomlString(current)+"\n")
+	return grokInsertMarker(toml, "# proxygo-prev-default = "+grokTomlString(current)+"\n")
 }
 
 func grokRestorePreviousDefault(toml string) string {
@@ -3457,7 +3457,7 @@ func grokRememberPreviousSubagent(toml, t string) string {
 	if cur, ok := grokGetSectionField(toml, "subagents.models", t); ok {
 		previous = cur
 	}
-	return grokInsertMarker(toml, "# 9router-prev-subagent-"+t+" = "+grokTomlString(previous)+"\n")
+	return grokInsertMarker(toml, "# proxygo-prev-subagent-"+t+" = "+grokTomlString(previous)+"\n")
 }
 
 func grokRestorePreviousSubagent(toml, t string) string {
@@ -3512,7 +3512,7 @@ type ctGrokSubSel struct {
 
 func grokApplyConfig(toml string, baseUrl, apiKey, model string, contextWindow float64, hasCW bool, subagents map[string]ctGrokSubSel, hasSubagents bool) string {
 	next := grokRememberPreviousDefault(toml)
-	next = grokUpsertModelSection(next, grokBuildModelSection(ctGrokMainSlot, model, baseUrl, apiKey, contextWindow, hasCW, "9Router"))
+	next = grokUpsertModelSection(next, grokBuildModelSection(ctGrokMainSlot, model, baseUrl, apiKey, contextWindow, hasCW, "ProxyGo"))
 	next = grokSetSectionField(next, "models", "default", ctGrokMainSlot)
 	if hasSubagents {
 		for _, t := range ctGrokSubagentTypes {
@@ -3520,7 +3520,7 @@ func grokApplyConfig(toml string, baseUrl, apiKey, model string, contextWindow f
 			slot := ctGrokSlotForType(t)
 			if ok && sel.Model != "" {
 				next = grokRememberPreviousSubagent(next, t)
-				next = grokUpsertModelSection(next, grokBuildModelSection(slot, sel.Model, baseUrl, apiKey, sel.ContextWindow, sel.HasCW, "9Router "+t))
+				next = grokUpsertModelSection(next, grokBuildModelSection(slot, sel.Model, baseUrl, apiKey, sel.ContextWindow, sel.HasCW, "ProxyGo "+t))
 				next = grokSetSectionField(next, "subagents.models", t, slot)
 			} else {
 				next = grokRestorePreviousSubagent(next, t)
@@ -3567,12 +3567,12 @@ func ctGrokGET(deps Deps) http.HandlerFunc {
 			toml = string(raw)
 		}
 		settings := grokParseConfig(toml)
-		has9 := false
+		hasProxyGo := false
 		if m := ctMap(settings["model"]); m != nil && Str(m, "base_url") != "" {
-			has9 = true
+			hasProxyGo = true
 		}
 		WriteJSON(w, 200, map[string]any{
-			"installed": true, "settings": settings, "has9Router": has9, "configPath": ctGrokPath(),
+			"installed": true, "settings": settings, "hasProxyGo": hasProxyGo, "configPath": ctGrokPath(),
 		})
 	}
 }
@@ -3630,7 +3630,7 @@ func ctGrokPOST(deps Deps) http.HandlerFunc {
 		}
 		WriteJSON(w, 200, map[string]any{
 			"success": true, "message": "Grok Build settings applied successfully!",
-			"configPath": ctGrokPath(), "modelSlot": "9router",
+			"configPath": ctGrokPath(), "modelSlot": "proxygo",
 		})
 	}
 }
@@ -3650,7 +3650,7 @@ func ctGrokDELETE(deps Deps) http.HandlerFunc {
 			Err(w, 500, "Failed to reset grok-build settings")
 			return
 		}
-		WriteJSON(w, 200, map[string]any{"success": true, "message": "9router model slots removed from Grok Build"})
+		WriteJSON(w, 200, map[string]any{"success": true, "message": "proxygo model slots removed from Grok Build"})
 	}
 }
 
@@ -3804,7 +3804,7 @@ func hermesUpsertEnvVar(envText, key, value string) string {
 	return envText + line + "\n"
 }
 
-func hermesHas9(cfg map[string]any) bool {
+func hermesHasProxyGo(cfg map[string]any) bool {
 	if cfg == nil || Str(cfg, "base_url") == "" {
 		return false
 	}
@@ -3869,7 +3869,7 @@ func hermesParseSttBlock(yaml string) map[string]any {
 	}
 }
 
-func hermesIs9RouterStt(cfg map[string]any) bool {
+func hermesIsProxyGoStt(cfg map[string]any) bool {
 	return cfg != nil && cfg["provider"] == "openai" && Str(cfg, "base_url") != "" && cfg["api_key"] == hermesSttAPIKeyRef
 }
 
@@ -3912,7 +3912,7 @@ func hermesUpsertSttOpenai(body, key, value string) string {
 	return body[:loc[0]] + "  openai:\n" + newSub + body[loc[1]:]
 }
 
-func hermesUpsertStt9Router(yaml, model, baseUrl string) string {
+func hermesUpsertSttProxyGo(yaml, model, baseUrl string) string {
 	m := hermesSttBlockRe.FindStringSubmatchIndex(yaml)
 	if m == nil {
 		prefix := yaml
@@ -3930,7 +3930,7 @@ func hermesUpsertStt9Router(yaml, model, baseUrl string) string {
 	return yaml[:m[0]] + "stt:\n" + body + yaml[m[1]:]
 }
 
-func hermesRemoveStt9Router(yaml string) string {
+func hermesRemoveSttProxyGo(yaml string) string {
 	m := hermesSttBlockRe.FindStringSubmatchIndex(yaml)
 	if m == nil {
 		return yaml
@@ -4032,11 +4032,11 @@ func hermesBuildEntry(name, dir string, isDefault bool) map[string]any {
 	delegation := hermesParseDelegationBlock(yaml)
 	auxiliary := hermesParseAuxRoles(yaml)
 	profileYaml, _ := hermesReadText(filepath.Join(dir, "profile.yaml"))
-	has9 := hermesHas9(model) || hermesHas9(delegation)
-	if !has9 {
+	hasProxyGo := hermesHasProxyGo(model) || hermesHasProxyGo(delegation)
+	if !hasProxyGo {
 		for _, v := range auxiliary {
-			if hermesHas9(ctMap(v)) {
-				has9 = true
+			if hermesHasProxyGo(ctMap(v)) {
+				hasProxyGo = true
 				break
 			}
 		}
@@ -4056,7 +4056,7 @@ func hermesBuildEntry(name, dir string, isDefault bool) map[string]any {
 		"name": name, "dir": dir, "isDefault": isDefault,
 		"displayName": hermesParseDisplayName(profileYaml),
 		"command":     command, "alias": alias,
-		"model": modelName, "baseUrl": baseUrl, "has9Router": has9,
+		"model": modelName, "baseUrl": baseUrl, "hasProxyGo": hasProxyGo,
 	}
 }
 
@@ -4169,11 +4169,11 @@ func ctHermesGET(deps Deps) http.HandlerFunc {
 		delegation := hermesParseDelegationBlock(yaml)
 		auxiliary := hermesParseAuxRoles(yaml)
 		stt := hermesParseSttBlock(yaml)
-		has9 := hermesHas9(model) || hermesHas9(delegation)
-		if !has9 {
+		hasProxyGo := hermesHasProxyGo(model) || hermesHasProxyGo(delegation)
+		if !hasProxyGo {
 			for _, v := range auxiliary {
-				if hermesHas9(ctMap(v)) {
-					has9 = true
+				if hermesHasProxyGo(ctMap(v)) {
+					hasProxyGo = true
 					break
 				}
 			}
@@ -4182,7 +4182,7 @@ func ctHermesGET(deps Deps) http.HandlerFunc {
 			"installed":  true,
 			"profile":    map[string]any{"name": home.Name, "dir": home.Dir, "isDefault": home.IsDefault},
 			"settings":   map[string]any{"model": model, "delegation": delegation, "auxiliary": auxiliary, "stt": stt},
-			"has9Router": has9, "has9RouterStt": hermesIs9RouterStt(stt),
+			"hasProxyGo": hasProxyGo, "hasProxyGoStt": hermesIsProxyGoStt(stt),
 			"configPath": home.ConfigPath,
 		})
 	}
@@ -4366,9 +4366,9 @@ func ctHermesPOST(deps Deps) http.HandlerFunc {
 		}
 		if audio != nil {
 			if audioEnabled {
-				newYaml = hermesUpsertStt9Router(newYaml, audioModel, normalized)
-			} else if hermesIs9RouterStt(hermesParseSttBlock(newYaml)) {
-				newYaml = hermesRemoveStt9Router(newYaml)
+				newYaml = hermesUpsertSttProxyGo(newYaml, audioModel, normalized)
+			} else if hermesIsProxyGoStt(hermesParseSttBlock(newYaml)) {
+				newYaml = hermesRemoveSttProxyGo(newYaml)
 			}
 		}
 		if err := hermesWriteHomeConfig(home, newYaml); err != nil {
@@ -4386,7 +4386,7 @@ func ctHermesPOST(deps Deps) http.HandlerFunc {
 		WriteJSON(w, 200, map[string]any{
 			"success": true, "message": msg,
 			"profile":    map[string]any{"name": home.Name, "dir": home.Dir, "isDefault": home.IsDefault},
-			"stt9Router": hermesIs9RouterStt(hermesParseSttBlock(newYaml)),
+			"sttProxyGo": hermesIsProxyGoStt(hermesParseSttBlock(newYaml)),
 			"configPath": home.ConfigPath,
 		})
 	}
@@ -4451,8 +4451,8 @@ func ctHermesDELETE(deps Deps) http.HandlerFunc {
 		}
 		removed["auxiliary"] = removedAux
 		if sttCfg := hermesParseSttBlock(yaml); sttCfg != nil {
-			if hermesIs9RouterStt(sttCfg) {
-				yaml = hermesRemoveStt9Router(yaml)
+			if hermesIsProxyGoStt(sttCfg) {
+				yaml = hermesRemoveSttProxyGo(yaml)
 				removed["stt"] = true
 				if hermesParseSttBlock(yaml) != nil {
 					kept = append(kept, "stt")
@@ -4472,7 +4472,7 @@ func ctHermesDELETE(deps Deps) http.HandlerFunc {
 		}
 		WriteJSON(w, 200, map[string]any{
 			"success": true, "profile": home.Name, "removed": removed, "kept": kept,
-			"message": "9router model blocks removed" + scope,
+			"message": "proxygo model blocks removed" + scope,
 		})
 	}
 }
@@ -4768,7 +4768,7 @@ func ctCoworkGET(deps Deps) http.HandlerFunc {
 		}
 		WriteJSON(w, 200, map[string]any{
 			"installed": true, "config": config,
-			"has9Router": config != nil && config["inferenceProvider"] == "gateway" && Str(config, "inferenceGatewayBaseUrl") != "",
+			"hasProxyGo": config != nil && config["inferenceProvider"] == "gateway" && Str(config, "inferenceGatewayBaseUrl") != "",
 			"configPath": configPath,
 			"cowork": map[string]any{
 				"appliedId": appliedId, "baseUrl": baseUrl, "models": models, "provider": provider,
@@ -4825,7 +4825,7 @@ func ctCoworkPOST(deps Deps) http.HandlerFunc {
 		entries, _ := meta["entries"].([]any)
 		name := Str(body, "profileName")
 		if name == "" {
-			name = "9Router"
+			name = "ProxyGo"
 		}
 		foundEntry := false
 		for _, e := range entries {
@@ -4934,7 +4934,7 @@ func ctCoworkPOST(deps Deps) http.HandlerFunc {
 		inferenceModels := []any{}
 		for _, m := range models {
 			s, _ := m.(string)
-			inferenceModels = append(inferenceModels, map[string]any{"name": s, "labelOverride": "9Router · " + s, "supports1m": true})
+			inferenceModels = append(inferenceModels, map[string]any{"name": s, "labelOverride": "ProxyGo · " + s, "supports1m": true})
 		}
 		config["inferenceModels"] = inferenceModels
 		if len(managedAll) > 0 {
@@ -5205,7 +5205,7 @@ func ctMcpProbe(rawURL string, headers map[string]string) (tools []any, requires
 		"jsonrpc": "2.0", "id": 1, "method": "initialize",
 		"params": map[string]any{
 			"protocolVersion": "2024-11-05", "capabilities": map[string]any{},
-			"clientInfo": map[string]any{"name": "9router", "version": "1"},
+			"clientInfo": map[string]any{"name": "proxygo", "version": "1"},
 		},
 	})
 	if err != nil {

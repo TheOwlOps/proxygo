@@ -1,4 +1,4 @@
-module 9router-go
+module proxygo
 
 go 1.23.0
 

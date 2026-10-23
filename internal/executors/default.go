@@ -244,7 +244,7 @@ func (d *DefaultExecutor) transformBody(b *Base, req *Request) (map[string]any, 
 // applyNousAttribution ports applyNousAttribution (default.js +
 // config/appConstants.js NOUS_ATTRIBUTION): only for openai-compatible-*
 // nodes pointing at the Nous inference host's /v1/chat/completions.
-var nousTags = []string{"product=9router", "client=9router", "user=9router"}
+var nousTags = []string{"product=proxygo", "client=proxygo", "user=proxygo"}
 
 func (d *DefaultExecutor) applyNousAttribution(b *Base, req *Request, body map[string]any) map[string]any {
 	if !strings.HasPrefix(b.ProviderID, "openai-compatible-") || req.Cred.APIKey == "" {

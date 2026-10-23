@@ -20,7 +20,7 @@ import (
 //     on rewrite (same trade-off as the rest of this port).
 //   - Codex TOML goes through mini_toml.go (subset; see its header).
 //   - Oh My Pi YAML is handled with indentation text ops (the JS uses
-//     a full YAML parser via confbox); the 9router block is replaced
+//     a full YAML parser via confbox); the proxygo block is replaced
 //     surgically and other providers are preserved byte-for-byte.
 
 type toolModel struct{ Key, Value string }
@@ -158,13 +158,13 @@ func jsonChildOrNew(m map[string]any, key string) map[string]any {
 	return nm
 }
 
-// writeToolFile ports writeFile: one-time backup to <file>.bak-9router,
+// writeToolFile ports writeFile: one-time backup to <file>.bak-proxygo,
 // then write with owner-only permissions.
 func writeToolFile(file string, content []byte) error {
 	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
 		return err
 	}
-	backup := file + ".bak-9router"
+	backup := file + ".bak-proxygo"
 	if _, err := os.Stat(file); err == nil {
 		if _, err := os.Stat(backup); os.IsNotExist(err) {
 			if raw, err := os.ReadFile(file); err == nil {
@@ -318,7 +318,7 @@ func codexServerModel(data map[string]any) string {
 	if err != nil {
 		return ""
 	}
-	if doc.str("model_provider") == "9router" && doc.str("model") != "" {
+	if doc.str("model_provider") == "proxygo" && doc.str("model") != "" {
 		return doc.str("model")
 	}
 	return ""
@@ -338,7 +338,7 @@ var toolCodex = toolDef{
 		}
 		var p *tomlTable
 		if mp := doc.child("model_providers", false); mp != nil {
-			p = mp.child("9router", false)
+			p = mp.child("proxygo", false)
 		}
 		var auth string
 		if p != nil {
@@ -356,7 +356,7 @@ var toolCodex = toolDef{
 		if ag := doc.child("agents", false); ag != nil && ag.str("default_subagent_model") != "" {
 			models = append(models, toolModel{"subagent", ag.str("default_subagent_model")})
 		}
-		active := doc.str("model_provider") == "9router"
+		active := doc.str("model_provider") == "proxygo"
 		out := toolConfig{Models: models, Active: &active}
 		if p != nil {
 			out.BaseURL = p.str("base_url")
@@ -370,10 +370,10 @@ var toolCodex = toolDef{
 			return nil, err
 		}
 		doc.set("model", ctx.Model)
-		doc.set("model_provider", "9router")
+		doc.set("model_provider", "proxygo")
 		mp := doc.child("model_providers", true)
-		p := mp.child("9router", true)
-		p.set("name", "9Router")
+		p := mp.child("proxygo", true)
+		p.set("name", "ProxyGo")
 		p.set("base_url", v1(ctx.BaseURL))
 		p.set("wire_api", "responses")
 		hh := p.child("http_headers", true)
@@ -394,12 +394,12 @@ var toolCodex = toolDef{
 		if err != nil {
 			return nil, err
 		}
-		if doc.str("model_provider") == "9router" {
+		if doc.str("model_provider") == "proxygo" {
 			doc.del("model")
 			doc.del("model_provider")
 		}
 		if mp := doc.child("model_providers", false); mp != nil {
-			mp.del("9router")
+			mp.del("proxygo")
 			if len(mp.order) == 0 {
 				doc.del("model_providers")
 			}
@@ -427,8 +427,8 @@ var toolOpenCode = toolDef{
 	paths: func() []string { return []string{opencodePath()} },
 	serverModel: func(data map[string]any) string {
 		m := strOf(jsonChild(data, "config")["model"])
-		if strings.HasPrefix(m, "9router/") {
-			return m[len("9router/"):]
+		if strings.HasPrefix(m, "proxygo/") {
+			return m[len("proxygo/"):]
 		}
 		return ""
 	},
@@ -439,7 +439,7 @@ var toolOpenCode = toolDef{
 		}
 		var p map[string]any
 		if prov := jsonChild(cfg, "provider"); prov != nil {
-			p = jsonChild(prov, "9router")
+			p = jsonChild(prov, "proxygo")
 		}
 		var models []toolModel
 		if isStr(cfg["model"]) {
@@ -460,7 +460,7 @@ var toolOpenCode = toolDef{
 				models = append(models, toolModel{"available", strings.Join(ids, ", ")})
 			}
 		}
-		active := strings.HasPrefix(strOf(cfg["model"]), "9router/")
+		active := strings.HasPrefix(strOf(cfg["model"]), "proxygo/")
 		out := toolConfig{Models: models, Active: &active}
 		if opts := jsonChild(p, "options"); opts != nil {
 			out.BaseURL = strOf(opts["baseURL"])
@@ -478,10 +478,10 @@ var toolOpenCode = toolDef{
 			cfg = map[string]any{}
 		}
 		prov := jsonChildOrNew(cfg, "provider")
-		p := jsonChild(prov, "9router")
+		p := jsonChild(prov, "proxygo")
 		if p == nil {
 			p = map[string]any{"npm": "@ai-sdk/openai-compatible", "options": map[string]any{}, "models": map[string]any{}}
-			prov["9router"] = p
+			prov["proxygo"] = p
 		}
 		opts := jsonChildOrNew(p, "options")
 		opts["baseURL"] = v1(ctx.BaseURL)
@@ -494,12 +494,12 @@ var toolOpenCode = toolDef{
 				"output": []any{"text"},
 			},
 		}
-		cfg["model"] = "9router/" + ctx.Model
+		cfg["model"] = "proxygo/" + ctx.Model
 		agent := jsonChildOrNew(cfg, "agent")
 		agent["explorer"] = map[string]any{
 			"description": "Fast explorer subagent for codebase exploration",
 			"mode":        "subagent",
-			"model":       "9router/" + ctx.Model,
+			"model":       "proxygo/" + ctx.Model,
 		}
 		if err := writeToolJSON(file, cfg); err != nil {
 			return nil, err
@@ -516,13 +516,13 @@ var toolOpenCode = toolDef{
 			return nil, nil
 		}
 		if prov := jsonChild(cfg, "provider"); prov != nil {
-			delete(prov, "9router")
+			delete(prov, "proxygo")
 		}
-		if strings.HasPrefix(strOf(cfg["model"]), "9router/") {
+		if strings.HasPrefix(strOf(cfg["model"]), "proxygo/") {
 			delete(cfg, "model")
 		}
 		if agent := jsonChild(cfg, "agent"); agent != nil {
-			if ex := jsonChild(agent, "explorer"); ex != nil && strings.HasPrefix(strOf(ex["model"]), "9router/") {
+			if ex := jsonChild(agent, "explorer"); ex != nil && strings.HasPrefix(strOf(ex["model"]), "proxygo/") {
 				delete(agent, "explorer")
 				if len(agent) == 0 {
 					delete(cfg, "agent")
@@ -540,7 +540,9 @@ var toolOpenCode = toolDef{
 
 func droidPath() string { return filepath.Join(homeDir(), ".factory", "settings.json") }
 
-func isDroid9r(m map[string]any) bool { return strings.HasPrefix(strOf(m["id"]), "custom:9Router") }
+func isDroidProxyGo(m map[string]any) bool {
+	return strings.HasPrefix(strOf(m["id"]), "custom:ProxyGo")
+}
 
 func droidCustomModels(cfg map[string]any) []map[string]any {
 	raw, _ := cfg["customModels"].([]any)
@@ -558,7 +560,7 @@ var toolDroid = toolDef{
 	paths: func() []string { return []string{droidPath()} },
 	serverModel: func(data map[string]any) string {
 		for _, m := range droidCustomModels(jsonChild(data, "settings")) {
-			if isDroid9r(m) && isStr(m["model"]) {
+			if isDroidProxyGo(m) && isStr(m["model"]) {
 				return strOf(m["model"])
 			}
 		}
@@ -571,7 +573,7 @@ var toolDroid = toolDef{
 		}
 		var ours []map[string]any
 		for _, m := range droidCustomModels(cfg) {
-			if isDroid9r(m) {
+			if isDroidProxyGo(m) {
 				ours = append(ours, m)
 			}
 		}
@@ -602,12 +604,12 @@ var toolDroid = toolDef{
 		}
 		var others []any
 		for _, m := range droidCustomModels(cfg) {
-			if !isDroid9r(m) {
+			if !isDroidProxyGo(m) {
 				others = append(others, m)
 			}
 		}
 		ours := map[string]any{
-			"model": ctx.Model, "id": "custom:9Router-0", "index": 0,
+			"model": ctx.Model, "id": "custom:ProxyGo-0", "index": 0,
 			"baseUrl": v1(ctx.BaseURL), "apiKey": ctx.APIKey, "displayName": ctx.Model,
 			"maxOutputTokens": 131072, "noImageSupport": false, "provider": "openai",
 		}
@@ -633,7 +635,7 @@ var toolDroid = toolDef{
 		if _, ok := cfg["customModels"]; ok {
 			var kept []any
 			for _, m := range droidCustomModels(cfg) {
-				if !isDroid9r(m) {
+				if !isDroidProxyGo(m) {
 					kept = append(kept, m)
 				}
 			}
@@ -665,7 +667,7 @@ var toolCrush = toolDef{
 	paths: func() []string { return []string{crushPath()} },
 	serverModel: func(data map[string]any) string {
 		prov := jsonChild(jsonChild(data, "config"), "providers")
-		p := jsonChild(prov, "9router")
+		p := jsonChild(prov, "proxygo")
 		models, _ := p["models"].([]any)
 		if len(models) > 0 {
 			if m, ok := models[0].(map[string]any); ok {
@@ -679,7 +681,7 @@ var toolCrush = toolDef{
 		if err != nil {
 			return toolConfig{}, err
 		}
-		p := jsonChild(jsonChild(cfg, "providers"), "9router")
+		p := jsonChild(jsonChild(cfg, "providers"), "proxygo")
 		out := toolConfig{}
 		if p != nil {
 			out.BaseURL = strOf(p["base_url"])
@@ -704,7 +706,7 @@ var toolCrush = toolDef{
 			cfg = map[string]any{}
 		}
 		prov := jsonChildOrNew(cfg, "providers")
-		prov["9router"] = map[string]any{
+		prov["proxygo"] = map[string]any{
 			"type": "openai-compat", "base_url": v1(ctx.BaseURL), "api_key": ctx.APIKey,
 			"models": []any{map[string]any{"id": ctx.Model, "name": ctx.Model, "context_window": 128000}},
 		}
@@ -723,10 +725,10 @@ var toolCrush = toolDef{
 			return nil, nil
 		}
 		prov := jsonChild(cfg, "providers")
-		if prov == nil || jsonChild(prov, "9router") == nil {
+		if prov == nil || jsonChild(prov, "proxygo") == nil {
 			return nil, nil
 		}
-		delete(prov, "9router")
+		delete(prov, "proxygo")
 		if len(prov) == 0 {
 			delete(cfg, "providers")
 		}
@@ -787,7 +789,7 @@ var toolKilo = toolDef{
 			return nil, nil
 		}
 		delete(cfg, "openai-compatible")
-		delete(cfg, "9router")
+		delete(cfg, "proxygo")
 		if err := rewriteToolJSON(file, cfg); err != nil {
 			return nil, err
 		}
@@ -915,7 +917,7 @@ var toolPi = toolDef{
 	id: "pi", name: "Pi", needsModel: true, route: "pi-settings",
 	paths: func() []string { return []string{piPath()} },
 	serverModel: func(data map[string]any) string {
-		p := jsonChild(jsonChild(jsonChild(data, "config"), "providers"), "9router")
+		p := jsonChild(jsonChild(jsonChild(data, "config"), "providers"), "proxygo")
 		models, _ := p["models"].([]any)
 		if len(models) == 0 {
 			return ""
@@ -933,7 +935,7 @@ var toolPi = toolDef{
 		if err != nil {
 			return toolConfig{}, err
 		}
-		p := jsonChild(jsonChild(cfg, "providers"), "9router")
+		p := jsonChild(jsonChild(cfg, "providers"), "proxygo")
 		out := toolConfig{}
 		if p != nil {
 			out.BaseURL = strOf(p["baseUrl"])
@@ -969,7 +971,7 @@ var toolPi = toolDef{
 			cfg = map[string]any{}
 		}
 		prov := jsonChildOrNew(cfg, "providers")
-		p := jsonChildOrNew(prov, "9router")
+		p := jsonChildOrNew(prov, "proxygo")
 		p["baseUrl"] = v1(ctx.BaseURL)
 		p["apiKey"] = ctx.APIKey
 		p["api"] = "openai-completions"
@@ -989,10 +991,10 @@ var toolPi = toolDef{
 			return nil, nil
 		}
 		prov := jsonChild(cfg, "providers")
-		if prov == nil || jsonChild(prov, "9router") == nil {
+		if prov == nil || jsonChild(prov, "proxygo") == nil {
 			return nil, nil
 		}
-		delete(prov, "9router")
+		delete(prov, "proxygo")
 		if len(prov) == 0 {
 			delete(cfg, "providers")
 		}
@@ -1018,7 +1020,7 @@ var toolOMP = toolDef{
 			}
 			return toolConfig{}, err
 		}
-		vals := ompRead9Router(string(raw))
+		vals := ompReadProxyGo(string(raw))
 		out := toolConfig{BaseURL: vals["baseUrl"], APIKey: vals["apiKey"]}
 		if vals["discovery.type"] == "proxy" {
 			out.Models = []toolModel{{"main", "(all server models, via discovery)"}}
@@ -1028,7 +1030,7 @@ var toolOMP = toolDef{
 	apply: func(ctx toolCtx) ([]string, error) {
 		file := ompPath()
 		raw, _ := os.ReadFile(file)
-		next := ompApply9Router(string(raw), ctx)
+		next := ompApplyProxyGo(string(raw), ctx)
 		if err := writeToolFile(file, []byte(next)); err != nil {
 			return nil, err
 		}
@@ -1043,7 +1045,7 @@ var toolOMP = toolDef{
 			}
 			return nil, err
 		}
-		next, changed := ompRemove9Router(string(raw))
+		next, changed := ompRemoveProxyGo(string(raw))
 		if !changed {
 			return nil, nil
 		}

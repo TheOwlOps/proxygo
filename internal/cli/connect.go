@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
-// `9router connect <server-url>` — port of
+// `proxygo connect <server-url>` — port of
 // cli/src/cli/commands/connect.js: point local CLI tools at a REMOTE
-// 9router server. Nothing runs locally: log in with the dashboard
+// proxygo server. Nothing runs locally: log in with the dashboard
 // password, reuse/create an API key for this machine, then write the
 // tools' settings files (tools.go). The password and API key are
 // never printed (key is masked).
@@ -27,26 +27,26 @@ import (
 //   - The JS interactive prompts are enquirer's masked Password and
 //     MultiSelect widgets. The Go port reads plain lines from stdin
 //     (no new dependencies): the password is NOT echo-masked — prefer
-//     --password / NINE_ROUTER_PASSWORD — and tool selection takes a
+//     --password / PROXYGO_PASSWORD — and tool selection takes a
 //     comma-separated line (Enter = claude). Non-terminal stdin keeps
 //     the exact JS behaviour (password required via flag/env, tools
 //     default to claude).
 //   - Requests go direct (no proxy), like the JS fetch.
 
 var connectHelp = `
-Usage: 9router connect <server-url> [options]
+Usage: proxygo connect <server-url> [options]
 
-Configure CLI tools on THIS machine to use a remote 9router server.
+Configure CLI tools on THIS machine to use a remote proxygo server.
 No local server is started:
 
-  9router connect http://<server-host>:20128
-  9router connect http://<server-host>:20128 --tools claude,codex,opencode
+  proxygo connect http://<server-host>:20128
+  proxygo connect http://<server-host>:20128 --tools claude,codex,opencode
 
 Options:
   --tools <list>         Comma-separated tools to configure (prompted if omitted
                          in a terminal; default: claude). Supported:
                          ` + strings.Join(append(append([]string{}, toolIDs...), "all"), ", ") + `
-  --password <pw>        Dashboard password (or env NINE_ROUTER_PASSWORD;
+  --password <pw>        Dashboard password (or env PROXYGO_PASSWORD;
                          prompted if omitted — preferred, keeps it out of shell history)
   --save                 After a successful login, save the password for this server
                          to the CLI data dir's connect.env (plain text, mode 600) so
@@ -59,15 +59,15 @@ Options:
   --fable|--opus|--sonnet|--haiku <model>
                          Override a Claude Code tier (default: the server's value)
   --print-env            Also print OpenAI-compatible env vars for other CLIs
-  --reset                Remove 9router settings from the selected tools and exit
+  --reset                Remove proxygo settings from the selected tools and exit
   -h, --help             Show this help
 
 Models come from the server's own CLI-tools config (set on its dashboard).
 Nothing is hardcoded: a Claude tier the server leaves unset is left unset,
 and a non-Claude tool with no model anywhere is skipped. Flags override:
 
-  9router connect http://<server-host>:20128 --tools claude --sonnet cc/claude-sonnet-5-5
-  9router connect http://<server-host>:20128 --tools codex,opencode --model ocg/deepseek-flash
+  proxygo connect http://<server-host>:20128 --tools claude --sonnet cc/claude-sonnet-5-5
+  proxygo connect http://<server-host>:20128 --tools codex,opencode --model ocg/deepseek-flash
 `
 
 type connectOptions struct {
@@ -90,7 +90,7 @@ func parseConnectArgs(args []string) (connectOptions, error) {
 	if len(keyName) > 64 {
 		keyName = keyName[:64]
 	}
-	opts := connectOptions{password: os.Getenv("NINE_ROUTER_PASSWORD"), keyName: keyName, models: map[string]string{}}
+	opts := connectOptions{password: os.Getenv("PROXYGO_PASSWORD"), keyName: keyName, models: map[string]string{}}
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		next := func() (string, error) {
@@ -180,8 +180,8 @@ func loadSavedPassword(server string) string {
 			env[m[1]] = m[2]
 		}
 	}
-	if env["NINE_ROUTER_SERVER"] == server && env["NINE_ROUTER_PASSWORD"] != "" {
-		return env["NINE_ROUTER_PASSWORD"]
+	if env["PROXYGO_SERVER"] == server && env["PROXYGO_PASSWORD"] != "" {
+		return env["PROXYGO_PASSWORD"]
 	}
 	return ""
 }
@@ -193,7 +193,7 @@ func savePassword(server, password string) (string, error) {
 	}
 	srv, _ := json.Marshal(server)
 	pw, _ := json.Marshal(password)
-	body := fmt.Sprintf("NINE_ROUTER_SERVER=%s\nNINE_ROUTER_PASSWORD=%s\n", srv, pw)
+	body := fmt.Sprintf("PROXYGO_SERVER=%s\nPROXYGO_PASSWORD=%s\n", srv, pw)
 	if err := os.WriteFile(file, []byte(body), 0o600); err != nil {
 		return "", err
 	}
@@ -505,7 +505,7 @@ func cmdConnect(args []string, stdout, stderr io.Writer, stdin io.Reader) int {
 				failed++
 				fmt.Fprintf(stdout, "❌ %s: %s\n", t.name, rerr)
 			case len(files) > 0:
-				fmt.Fprintf(stdout, "✅ %s: removed 9router settings (%s)\n", t.name, strings.Join(files, ", "))
+				fmt.Fprintf(stdout, "✅ %s: removed proxygo settings (%s)\n", t.name, strings.Join(files, ", "))
 			default:
 				fmt.Fprintf(stdout, "• %s: nothing to reset\n", t.name)
 			}
@@ -544,10 +544,10 @@ func cmdConnect(args []string, stdout, stderr io.Writer, stdin io.Reader) int {
 		}
 		if password == "" {
 			if !tty {
-				fmt.Fprintln(stderr, "❌ Password required: pass --password or set NINE_ROUTER_PASSWORD")
+				fmt.Fprintln(stderr, "❌ Password required: pass --password or set PROXYGO_PASSWORD")
 				return 1
 			}
-			pw, perr := promptLine(br, stdout, "9router dashboard password: ")
+			pw, perr := promptLine(br, stdout, "proxygo dashboard password: ")
 			if perr != nil {
 				fmt.Fprintln(stdout, "Cancelled.")
 				return 130
@@ -695,10 +695,10 @@ func cmdConnect(args []string, stdout, stderr io.Writer, stdin io.Reader) int {
 	}
 	for _, t := range tools {
 		if t.id == "omp" {
-			fmt.Fprintln(stdout, "   omp models: every server model, listed under 9router in /model")
+			fmt.Fprintln(stdout, "   omp models: every server model, listed under proxygo in /model")
 		}
 	}
-	fmt.Fprintf(stdout, "   Restart the tools to apply. Undo: 9router connect --reset --tools %s\n", strings.Join(ids, ","))
+	fmt.Fprintf(stdout, "   Restart the tools to apply. Undo: proxygo connect --reset --tools %s\n", strings.Join(ids, ","))
 
 	if opts.printEnv {
 		fmt.Fprintln(stdout, "\nOpenAI-compatible CLIs (codex, opencode, aider, …):")

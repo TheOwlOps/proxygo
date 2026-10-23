@@ -24,7 +24,7 @@ const playgroundHTML = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>9Router Playground</title>
+<title>ProxyGo Playground</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -96,8 +96,8 @@ const playgroundHTML = `<!DOCTYPE html>
   }
   .btn:hover:not(:disabled) { background: #f3f4f6; }
   .btn:disabled { opacity: 0.5; cursor: default; }
-  .btn.primary { background: #111827; border-color: #111827; color: #ffffff; }
-  .btn.primary:hover:not(:disabled) { background: #1f2937; }
+  .btn.primary { background: #4f46e5; border-color: #4f46e5; color: #ffffff; }
+  .btn.primary:hover:not(:disabled) { background: #4338ca; border-color: #4338ca; }
   .btn.toggle.active { background: #111827; border-color: #111827; color: #ffffff; }
   .key-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
   .key-row > .grow { flex: 1 1 260px; }
@@ -178,7 +178,7 @@ const playgroundHTML = `<!DOCTYPE html>
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <h1>9Router Playground</h1>
+    <h1>ProxyGo Playground</h1>
     <span class="badge">chat tester</span>
   </div>
 </header>
@@ -261,7 +261,7 @@ const playgroundHTML = `<!DOCTYPE html>
 (function () {
   "use strict";
 
-  var LS_KEY = "9router-playground-api-key";
+  var LS_KEY = "proxygo-playground-api-key";
 
   function el(id) { return document.getElementById(id); }
   var keyInput = el("api-key");

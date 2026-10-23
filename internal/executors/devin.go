@@ -148,7 +148,7 @@ rl.on("line", (line) => {
 // devinEnsureClientToolsScript ports ensureClientToolsScript: always
 // rewrite so script upgrades land without a process restart.
 func devinEnsureClientToolsScript() string {
-	scriptPath := filepath.Join(os.TempDir(), "9router-devin-client-tools.mjs")
+	scriptPath := filepath.Join(os.TempDir(), "proxygo-devin-client-tools.mjs")
 	_ = os.WriteFile(scriptPath, []byte(strings.TrimLeft(devinClientToolsMCPScript, "\n")), 0o644)
 	return scriptPath
 }
@@ -175,7 +175,7 @@ func (s devinMCPServer) MarshalJSON() ([]byte, error) {
 // devinBuildClientToolsMCP ports buildClientToolsMcp: map OpenAI tools to
 // MCP declarations (mcp_-prefixed names) + the stdio server entry, or nil
 // when there are no usable tools. nodePath is the Node binary used as the
-// MCP server command (JS: process.execPath — the node running 9router; the
+// MCP server command (JS: process.execPath — the node running proxygo; the
 // Go port has no node parent, so it resolves `node` from PATH).
 func devinBuildClientToolsMCP(tools []any, resultMap map[string]string) *devinMCPServer {
 	var mcpTools []map[string]any
@@ -808,7 +808,7 @@ func (s *devinSession) run(stdout io.Reader) {
 	// Send initialize.
 	s.sendRPC("initialize", map[string]any{
 		"protocolVersion": "0.3",
-		"clientInfo":      map[string]any{"name": "9router", "version": "1.0"},
+		"clientInfo":      map[string]any{"name": "proxygo", "version": "1.0"},
 		"capabilities":    map[string]any{},
 	})
 

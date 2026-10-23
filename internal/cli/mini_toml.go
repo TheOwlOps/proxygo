@@ -12,7 +12,7 @@ import (
 // single-line arrays of scalars and inline tables. Multiline strings,
 // arrays of tables and multiline arrays are rejected with a parse
 // error (the JS uses the full confbox parser; this subset covers the
-// shapes 9router itself writes plus typical hand edits — the same
+// shapes proxygo itself writes plus typical hand edits — the same
 // trade-off the dashboard's TOML port documents in
 // internal/api/clitools.go).
 //

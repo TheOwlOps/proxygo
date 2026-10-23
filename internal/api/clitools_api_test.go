@@ -82,10 +82,10 @@ func TestCLIToolsClaudeSettingsRoundTrip(t *testing.T) {
 		t.Fatalf("hasCompletedOnboarding = %v", settings["hasCompletedOnboarding"])
 	}
 
-	// GET now reports installed + 9Router wiring.
+	// GET now reports installed + ProxyGo wiring.
 	rec = ctDo(ctClaudeGET(deps), "GET", "/api/cli-tools/claude-settings", "")
 	got := ctJSON(t, rec)
-	if got["installed"] != true || got["has9Router"] != true {
+	if got["installed"] != true || got["hasProxyGo"] != true {
 		t.Fatalf("GET after POST = %v", got)
 	}
 
@@ -116,14 +116,14 @@ func TestCLIToolsCodexSettingsToml(t *testing.T) {
 		t.Fatalf("config.toml not written: %v", err)
 	}
 	content := string(raw)
-	for _, want := range []string{"[model_providers.9router]", `base_url = "http://localhost:20128/v1"`, `wire_api = "responses"`, `model_provider = "9router"`} {
+	for _, want := range []string{"[model_providers.proxygo]", `base_url = "http://localhost:20128/v1"`, `wire_api = "responses"`, `model_provider = "proxygo"`} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("config.toml missing %q:\n%s", want, content)
 		}
 	}
 	rec = ctDo(ctCodexGET(deps), "GET", "/api/cli-tools/codex-settings", "")
-	if got := ctJSON(t, rec); got["has9Router"] != true {
-		t.Fatalf("codex GET has9Router = %v", got["has9Router"])
+	if got := ctJSON(t, rec); got["hasProxyGo"] != true {
+		t.Fatalf("codex GET hasProxyGo = %v", got["hasProxyGo"])
 	}
 }
 
@@ -150,8 +150,8 @@ func TestCLIToolsHermesSettingsYaml(t *testing.T) {
 		t.Fatalf(".env missing key: %v %q", err, envRaw)
 	}
 	rec = ctDo(ctHermesGET(deps), "GET", "/api/cli-tools/hermes-settings", "")
-	if got := ctJSON(t, rec); got["has9Router"] != true {
-		t.Fatalf("hermes GET has9Router = %v (body %s)", got["has9Router"], rec.Body.String())
+	if got := ctJSON(t, rec); got["hasProxyGo"] != true {
+		t.Fatalf("hermes GET hasProxyGo = %v (body %s)", got["hasProxyGo"], rec.Body.String())
 	}
 }
 
@@ -205,7 +205,7 @@ func TestCLIToolsGrokBuildConfig(t *testing.T) {
 	}
 	raw, _ := os.ReadFile(filepath.Join(grokDir, "config.toml"))
 	content := string(raw)
-	for _, want := range []string{"[model.9router]", `# 9router-prev-default = "grok-build"`, `default = "9router"`, "context_window = 200000"} {
+	for _, want := range []string{"[model.proxygo]", `# proxygo-prev-default = "grok-build"`, `default = "proxygo"`, "context_window = 200000"} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("grok config missing %q:\n%s", want, content)
 		}
@@ -217,7 +217,7 @@ func TestCLIToolsGrokBuildConfig(t *testing.T) {
 	}
 	raw, _ = os.ReadFile(filepath.Join(grokDir, "config.toml"))
 	content = string(raw)
-	if strings.Contains(content, "[model.9router]") || !strings.Contains(content, `default = "grok-build"`) {
+	if strings.Contains(content, "[model.proxygo]") || !strings.Contains(content, `default = "grok-build"`) {
 		t.Fatalf("grok reset wrong:\n%s", content)
 	}
 }

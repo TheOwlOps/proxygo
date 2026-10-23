@@ -151,7 +151,7 @@ func TestZedExecutorXAIStreamEndToEnd(t *testing.T) {
 	head := f.completionHeads[0]
 	if head.Get("x-zed-client-supports-status-messages") != "true" ||
 		head.Get("x-zed-client-supports-stream-ended-request-completion-status") != "true" ||
-		head.Get("User-Agent") != "9router/zed" {
+		head.Get("User-Agent") != "proxygo/zed" {
 		t.Fatalf("completions headers missing zed markers: %v", head)
 	}
 	// Payload envelope: provider wire spelling + OpenAI passthrough body.

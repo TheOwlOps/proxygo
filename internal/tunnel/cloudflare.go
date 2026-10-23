@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // WorkerURL (cloudflare/config.js WORKER_URL).

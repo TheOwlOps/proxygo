@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // Settings is the slice of the dashboard store the tunnel services use

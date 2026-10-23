@@ -8,7 +8,11 @@ app_port: 7860
 pinned: false
 ---
 
-# proxygo — 9Router, rewritten in Go
+# ProxyGo
+
+**ProxyGo** is the Go port of [9Router](https://github.com/decolua/9router)
+v0.5.104, rebranded end to end (name, indigo identity, CLI, env vars,
+headers) — everything below describes the ProxyGo build.
 
 A complete Go port of [9Router](https://github.com/decolua/9router)
 v0.5.104: the AI router that fronts 100+ providers behind one
@@ -63,21 +67,21 @@ by speed and by tokens.
 ## Run it
 
 ```bash
-go build -o 9router ./cmd/9router
-PORT=20128 ./9router
+go build -o proxygo ./cmd/proxygo
+PORT=20128 ./proxygo
 ```
 
 ```powershell
 # Windows (PowerShell)
-go build -o 9router.exe .\cmd\9router
-$env:PORT=20128; .\9router.exe
+go build -o proxygo.exe .\cmd\proxygo
+$env:PORT=20128; .\proxygo.exe
 ```
 
 - Dashboard + API on the same port. Point `WEB_DIR` at a built
   dashboard directory to serve the React UI (without it the server
   still answers the full API surface plus `/playground`).
 - Data lives in SQLite at `$DATA_DIR/db/data.sqlite`
-  (default `~/.9router`), schema-compatible with the original
+  (default `~/.proxygo`), schema-compatible with the original
   `src/lib/db`; a legacy `db.json` is imported once, automatically.
 - First-run shortcut: start with `UPSTREAM_API_KEY=sk-...` to seed
   an `openai` connection on an empty database.
@@ -88,7 +92,7 @@ $env:PORT=20128; .\9router.exe
   `openai-compatible-*` / `anthropic-compatible-*` node, add a
   connection, and its models are discovered live from the endpoint.
 
-CLI companion (`cmd/9router-cli`): start/stop/status/open,
+CLI companion (`cmd/proxygo-cli`): start/stop/status/open,
 connect CLI tools (Claude Code, Codex, Copilot, Cline…), `show`,
 `xai video`, `update`, and a Windows system tray.
 
@@ -113,7 +117,7 @@ All opt-in via dashboard settings, default off, zero behavior change
 when off:
 
 - **Response cache** — byte-level replay (SSE included), LRU + TTL,
-  `x-9router-no-cache: 1` bypass, `GET /api/cache/stats`,
+  `x-proxygo-no-cache: 1` bypass, `GET /api/cache/stats`,
   `POST /api/cache/clear`
 - **Circuit breaker** — per-connection failure threshold with
   half-open probing, `GET /api/breaker/stats` (HTTP 429 counts as
@@ -122,8 +126,8 @@ when off:
   per API key (`/api/keys/{id}/limits`), fail-open by design
 - **Playground** — embedded at `/playground`, single + compare mode
 - **Self-update** — checksum-verified binary swap from GitHub
-  Releases (dashboard action and `9router-cli update`); activates
-  when a release publishes `9router-go-<os>-<arch>` assets
+  Releases (dashboard action and `proxygo-cli update`); activates
+  when a release publishes `proxygo-<os>-<arch>` assets
 - **PII redaction** — emails, phone numbers, Luhn-validated cards
   and API keys are masked before prompts leave the server; national
   IDs behind a separate opt-in
@@ -164,6 +168,21 @@ under your first active API key).
   passToken from the desktop cookie DB, Zed Windows Credential
   Manager, Bedrock profile-mode credentials — static keys work
   everywhere.
+
+## Rebrand notes (9Router → ProxyGo)
+
+- The default data directory moved from `~/.9router` to
+  `~/.proxygo` — existing installs should move the folder or set
+  `DATA_DIR`. Env vars are `PROXYGO_*`; CLI tool configs written by
+  the connect flow use the `proxygo` provider key.
+- A handful of wire identifiers deliberately keep the old name —
+  the SAML entityID `urn:9router:sp`, the API-key HMAC fallback
+  secret, the MITM password-encryption salt, and a few
+  provider-registered client tokens (`X-Msh-Platform`,
+  `X-CLIENT-TYPE`, the xAI referrer) — because renaming them would
+  invalidate existing IdP registrations, already-issued API keys,
+  stored credentials, or provider allowlists. They are invisible
+  in the UI; see `docs/REBRAND_PROXYGO.md` for the full contract.
 
 ## Docs
 

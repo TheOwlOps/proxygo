@@ -192,7 +192,7 @@ func buildClineHeaders(token string) map[string]string {
 	headers := map[string]string{
 		"HTTP-Referer":       "https://cline.bot",
 		"X-Title":            "Cline",
-		"User-Agent":         "9Router/" + appVersion,
+		"User-Agent":         "ProxyGo/" + appVersion,
 		"X-PLATFORM":         runtime.GOOS,
 		"X-PLATFORM-VERSION": "go",
 		"X-CLIENT-TYPE":      "9router",

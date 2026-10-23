@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // Tailscale health timings (tailscale/config.js HEALTH_CHECK).

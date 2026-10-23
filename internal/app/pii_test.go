@@ -3,7 +3,7 @@ package app
 import (
 	"testing"
 
-	"9router-go/internal/chatcore"
+	"proxygo/internal/chatcore"
 )
 
 func piiTestBody() map[string]any {

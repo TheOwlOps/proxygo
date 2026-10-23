@@ -55,7 +55,7 @@ func requestDeviceCodeImpl(ctx context.Context, name string, cfg Config, codeCha
 	case "github":
 		form := url.Values{"client_id": {cfg.Str("clientId")}, "scope": {cfg.ScopeString()}}
 		status, body, err := PostForm(ctx, cfg.Str("deviceCodeUrl"), form,
-			map[string]string{"User-Agent": cfg.StrOr("userAgent", "9Router")})
+			map[string]string{"User-Agent": cfg.StrOr("userAgent", "ProxyGo")})
 		if err != nil {
 			return nil, err
 		}
@@ -135,7 +135,7 @@ func requestDeviceCodeImpl(ctx context.Context, name string, cfg Config, codeCha
 	case "nous":
 		status, body, err := PostJSON(ctx, cfg.Str("deviceCodeUrl"), map[string]any{
 			"client_id": cfg.Str("clientId"),
-		}, map[string]string{"User-Agent": "9Router"})
+		}, map[string]string{"User-Agent": "ProxyGo"})
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +274,7 @@ func pollGitHub(ctx context.Context, cfg Config, deviceCode string) (*pollOutcom
 		"grant_type":  {deviceGrantType},
 	}
 	status, body, err := PostForm(ctx, cfg.Str("tokenUrl"), form,
-		map[string]string{"User-Agent": cfg.StrOr("userAgent", "9Router")})
+		map[string]string{"User-Agent": cfg.StrOr("userAgent", "ProxyGo")})
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func pollGitHub(ctx context.Context, cfg Config, deviceCode string) (*pollOutcom
 	if cfg.Str("userInfoUrl") != "" {
 		if s, user, err := GetJSON(ctx, cfg.Str("userInfoUrl"), map[string]string{
 			"Authorization": "Bearer " + accessToken,
-			"User-Agent":    cfg.StrOr("userAgent", "9Router"),
+			"User-Agent":    cfg.StrOr("userAgent", "ProxyGo"),
 		}); err == nil && s == http.StatusOK {
 			SetIf(out, "email", strOf(user, "email"))
 			SetIf(out, "displayName", firstStr(strOf(user, "name"), strOf(user, "login")))
@@ -317,7 +317,7 @@ func GitHubCopilotToken(ctx context.Context, cfg Config, accessToken string) str
 	endpoint := cfg.StrOr("copilotTokenUrl", "https://api.github.com/copilot_internal/v2/token")
 	status, body, err := GetJSON(ctx, endpoint, map[string]string{
 		"Authorization":         "token " + accessToken,
-		"User-Agent":            cfg.StrOr("userAgent", "9Router"),
+		"User-Agent":            cfg.StrOr("userAgent", "ProxyGo"),
 		"Editor-Version":        cfg.StrOr("editorVersion", "vscode/1.95.0"),
 		"Editor-Plugin-Version": cfg.StrOr("editorPluginVersion", "copilot-chat/0.22.0"),
 	})
@@ -566,7 +566,7 @@ func pollNous(ctx context.Context, cfg Config, deviceCode string) (*pollOutcome,
 	status, body, err := PostJSON(ctx, cfg.Str("tokenUrl"), map[string]any{
 		"device_code": deviceCode,
 		"grant_type":  deviceGrantType,
-	}, map[string]string{"User-Agent": "9Router"})
+	}, map[string]string{"User-Agent": "ProxyGo"})
 	if err != nil {
 		return nil, err
 	}

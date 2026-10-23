@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
-	"9router-go/internal/oauthsvc"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
+	"proxygo/internal/oauthsvc"
 )
 
 type pvTestEnv struct {

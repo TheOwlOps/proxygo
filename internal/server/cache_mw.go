@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"9router-go/internal/respcache"
+	"proxygo/internal/respcache"
 )
 
 // cache_mw.go — Feature Pack F1: byte-level response cache for the
@@ -21,9 +21,9 @@ import (
 //   - Fully opt-in: when respcache.Config() reports disabled (the
 //     default until Configure is wired to settings), every request
 //     passes through untouched.
-//   - Header `x-9router-no-cache: 1` bypasses both lookup and store.
+//   - Header `x-proxygo-no-cache: 1` bypasses both lookup and store.
 //   - On a hit the stored status/headers/body are replayed verbatim
-//     plus `x-9router-cache: hit`. On a miss the response is tee'd
+//     plus `x-proxygo-cache: hit`. On a miss the response is tee'd
 //     while streaming to the client and stored after completion —
 //     ONLY for status 200 and bodies up to 4MB — so SSE streams are
 //     cached as their raw byte stream and replayed byte for byte.
@@ -46,7 +46,7 @@ func CacheMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		enabled, _, _ := respcache.Config()
-		if !enabled || r.Header.Get("x-9router-no-cache") == "1" {
+		if !enabled || r.Header.Get("x-proxygo-no-cache") == "1" {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -74,7 +74,7 @@ func CacheMiddleware(next http.Handler) http.Handler {
 					w.Header().Add(k, v)
 				}
 			}
-			w.Header().Set("x-9router-cache", "hit")
+			w.Header().Set("x-proxygo-cache", "hit")
 			w.WriteHeader(ent.Status)
 			_, _ = w.Write(ent.Body)
 			return

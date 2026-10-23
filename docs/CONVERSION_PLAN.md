@@ -38,7 +38,7 @@ React/Next dashboard cannot be "converted to Go" 1:1. Three honest routes:
 ## Go architecture (all routes)
 
 ```
-cmd/9router/            main, config from env (.env.example contract kept)
+cmd/proxygo/            main, config from env (.env.example contract kept)
 internal/
   server/               net/http mux — /v1/*, /api/*, /health, static UI
   translator/           OpenAI pivot; direct routes for fragile pairs
@@ -54,11 +54,11 @@ internal/
                         repos + migrations ported from src/lib/db
   auth/                 JWT (golang-jwt), password, API keys; SAML/OIDC = phase 2
   oauth/                provider token refresh services
-  usage/                usage/quota tracking (~/.9router, DATA_DIR rules kept)
+  usage/                usage/quota tracking (~/.proxygo, DATA_DIR rules kept)
   tunnel/, mitm/, updater/   later phases
 ```
 
-Env contract, port (20128), data dir (`~/.9router/` / `DATA_DIR`), and the
+Env contract, port (20128), data dir (`~/.proxygo/` / `DATA_DIR`), and the
 OpenAI-compatible surface stay identical so existing CLI tools
 (Claude Code, Codex, Cursor, Cline…) keep working unchanged.
 
@@ -78,7 +78,7 @@ OpenAI-compatible surface stay identical so existing CLI tools
 
 ## Scaffold status
 
-`cmd/9router/main.go` — minimal proof-of-route: `/health`,
+`cmd/proxygo/main.go` — minimal proof-of-route: `/health`,
 `/v1/models`, `/v1/chat/completions` with streaming passthrough to an
 OpenAI-compatible upstream (`UPSTREAM_BASE_URL` / `UPSTREAM_API_KEY`).
 Builds and runs with Go 1.23 — verified locally before this plan was filed.

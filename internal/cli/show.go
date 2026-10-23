@@ -7,20 +7,20 @@ import (
 	"strings"
 )
 
-// `9router show [tool…]` — port of cli/src/cli/commands/show.js:
-// print the 9router settings currently written in each CLI tool's
+// `proxygo show [tool…]` — port of cli/src/cli/commands/show.js:
+// print the proxygo settings currently written in each CLI tool's
 // LOCAL config: base URL, (masked) API key and models. Read-only and
 // offline: never contacts a server and never prints a full key.
 
 var showHelp = `
-Usage: 9router show [tool…] [options]
+Usage: proxygo show [tool…] [options]
 
-Show the 9router settings each CLI tool on THIS machine is currently using.
+Show the proxygo settings each CLI tool on THIS machine is currently using.
 Read-only: reads local config files, contacts no server.
 
-  9router show                 # every supported tool
-  9router show claude          # one tool
-  9router show claude codex    # several (or: --tools claude,codex)
+  proxygo show                 # every supported tool
+  proxygo show claude          # one tool
+  proxygo show claude codex    # several (or: --tools claude,codex)
 
 Tools: ` + strings.Join(append(append([]string{}, toolIDs...), "all"), ", ") + `
 
@@ -107,12 +107,12 @@ func printShowRecord(w io.Writer, r showRecord) {
 		return
 	}
 	if !r.Configured {
-		fmt.Fprintf(w, "• %s: not configured for 9router (%s)\n", r.Name, r.Files[0])
+		fmt.Fprintf(w, "• %s: not configured for proxygo (%s)\n", r.Name, r.Files[0])
 		return
 	}
 	inactive := ""
 	if r.Active != nil && !*r.Active {
-		inactive = "  (9router present but not the active provider)"
+		inactive = "  (proxygo present but not the active provider)"
 	}
 	fmt.Fprintf(w, "✅ %s%s\n", r.Name, inactive)
 	fmt.Fprintf(w, "   File:     %s\n", strings.Join(r.Files, ", "))

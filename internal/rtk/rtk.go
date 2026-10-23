@@ -1,4 +1,4 @@
-// Package rtk is the Go port of open-sse/rtk/ (9Router v0.5.104):
+// Package rtk is the Go port of open-sse/rtk/ (ProxyGo v0.5.104):
 // compress tool_result content in LLM request bodies before translation.
 //
 // Fail-open by design (mirrors the JS): any panic/error inside a filter or

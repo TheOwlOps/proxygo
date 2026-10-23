@@ -115,7 +115,7 @@ const (
 	imageIcon        = 1 // IMAGE_ICON for LoadImageW
 	lrLoadFromFile   = 0x0010
 	lrDefaultSize    = 0x0040
-	trayWindowClass  = "9RouterTrayWindow"
+	trayWindowClass  = "ProxyGoTrayWindow"
 	trayMenuOpenID   = 1001
 	trayMenuStartID  = 1002
 	trayMenuStopID   = 1003
@@ -216,7 +216,7 @@ func runTray(opts options, stdout, stderr io.Writer) int {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	fmt.Fprintln(stdout, "🔔 Tray mode: starting the server in the background; a 9Router icon appears in the system tray.")
+	fmt.Fprintln(stdout, "🔔 Tray mode: starting the server in the background; a ProxyGo icon appears in the system tray.")
 	fmt.Fprintln(stdout, "   Right-click the tray icon for Open Dashboard / Start Server / Stop Server / Quit.")
 
 	// JS tray mode does not pop a browser; the menu's Open Dashboard
@@ -230,7 +230,7 @@ func runTray(opts options, stdout, stderr io.Writer) int {
 
 	if err := t.setup(); err != nil {
 		fmt.Fprintf(stderr, "Tray icon unavailable: %v\n", err)
-		fmt.Fprintln(stderr, "The server was left as-is; manage it with `9router-cli status`, `9router-cli open` and `9router-cli stop`.")
+		fmt.Fprintln(stderr, "The server was left as-is; manage it with `proxygo-cli status`, `proxygo-cli open` and `proxygo-cli stop`.")
 		if startCode != 0 {
 			return startCode
 		}
@@ -262,7 +262,7 @@ func (t *trayApp) setup() error {
 	// real success check.
 	_, _, _ = procTrayRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 
-	title, err := windows.UTF16PtrFromString("9Router")
+	title, err := windows.UTF16PtrFromString("ProxyGo")
 	if err != nil {
 		return err
 	}
@@ -359,9 +359,9 @@ func (t *trayApp) notify(action uintptr) bool {
 // tipText is the icon tooltip, refreshed from live pid-file state.
 func (t *trayApp) tipText() string {
 	if st, ok := readPidState(); ok && processAlive(st.PID) {
-		return fmt.Sprintf("9Router — running on port %d", st.Port)
+		return fmt.Sprintf("ProxyGo — running on port %d", st.Port)
 	}
-	return "9Router — stopped"
+	return "ProxyGo — stopped"
 }
 
 func copyUTF16(dst []uint16, s string) {
@@ -533,7 +533,7 @@ func (t *trayApp) doQuit() {
 // removed right after the load: LoadImageW has fully read it by
 // then and the returned HICON is independent of it.
 func loadTrayIcon() (uintptr, error) {
-	f, err := os.CreateTemp("", "9router-tray-*.ico")
+	f, err := os.CreateTemp("", "proxygo-tray-*.ico")
 	if err != nil {
 		return 0, err
 	}

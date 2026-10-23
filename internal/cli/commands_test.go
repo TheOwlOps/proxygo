@@ -71,31 +71,31 @@ func TestCodexRoundTrip(t *testing.T) {
 
 func TestOmpYAMLRoundTrip(t *testing.T) {
 	text := "providers:\n  other:\n    apiKey: keepme\n"
-	out := ompApply9Router(text, toolCtx{BaseURL: "http://h:20128", APIKey: "k-omp-123"})
+	out := ompApplyProxyGo(text, toolCtx{BaseURL: "http://h:20128", APIKey: "k-omp-123"})
 	if !strings.Contains(out, "other:") || !strings.Contains(out, "keepme") {
 		t.Fatalf("other provider lost:\n%s", out)
 	}
 	if !strings.Contains(out, "baseUrl: http://h:20128/v1") {
-		t.Fatalf("9router block missing:\n%s", out)
+		t.Fatalf("proxygo block missing:\n%s", out)
 	}
-	got := ompRead9Router(out)
+	got := ompReadProxyGo(out)
 	if got["baseUrl"] != "http://h:20128/v1" || got["apiKey"] != "k-omp-123" || got["discovery.type"] != "proxy" {
 		t.Fatalf("read=%v", got)
 	}
-	removed, changed := ompRemove9Router(out)
-	if !changed || strings.Contains(removed, "9router") || !strings.Contains(removed, "keepme") {
+	removed, changed := ompRemoveProxyGo(out)
+	if !changed || strings.Contains(removed, "proxygo") || !strings.Contains(removed, "keepme") {
 		t.Fatalf("remove changed=%v:\n%s", changed, removed)
 	}
 	// Removing the only provider drops the providers: header too.
-	only := ompApply9Router("", toolCtx{BaseURL: "http://h:20128", APIKey: "k"})
-	removed, _ = ompRemove9Router(only)
+	only := ompApplyProxyGo("", toolCtx{BaseURL: "http://h:20128", APIKey: "k"})
+	removed, _ = ompRemoveProxyGo(only)
 	if strings.TrimSpace(removed) != "" {
 		t.Fatalf("expected empty after removing sole provider, got %q", removed)
 	}
 }
 
-// fake9Router is the minimal server surface `connect` talks to.
-func fake9Router(t *testing.T) *httptest.Server {
+// fakeProxyGo is the minimal server surface `connect` talks to.
+func fakeProxyGo(t *testing.T) *httptest.Server {
 	t.Helper()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +136,7 @@ func TestConnectEndToEnd(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("DATA_DIR", t.TempDir())
-	srv := fake9Router(t)
+	srv := fakeProxyGo(t)
 
 	var out, errBuf bytes.Buffer
 	code := run([]string{"connect", srv.URL, "--tools", "claude", "--password", "pw"}, &out, &errBuf, strings.NewReader(""))
@@ -179,7 +179,7 @@ func TestConnectEndToEnd(t *testing.T) {
 		t.Error("show printed the full API key")
 	}
 
-	// --reset removes the 9router env keys again.
+	// --reset removes the proxygo env keys again.
 	out.Reset()
 	code = run([]string{"connect", "--reset", "--tools", "claude"}, &out, &errBuf, strings.NewReader(""))
 	if code != 0 {
@@ -239,7 +239,7 @@ func TestXaiVideoFlow(t *testing.T) {
 	var srv *httptest.Server
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/videos/generations", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("x-9router-connection-id", "conn-1")
+		w.Header().Set("x-proxygo-connection-id", "conn-1")
 		fmt.Fprint(w, `{"request_id":"req-1"}`)
 	})
 	mux.HandleFunc("/v1/videos/req-1", func(w http.ResponseWriter, r *http.Request) {

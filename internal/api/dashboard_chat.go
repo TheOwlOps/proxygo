@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"9router-go/internal/chatcore"
+	"proxygo/internal/chatcore"
 )
 
 // dashboard_chat.go — POST /api/dashboard/chat/completions.

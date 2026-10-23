@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 func runCapture(args ...string) (int, string, string) {
@@ -95,11 +95,11 @@ func TestDisplayHost(t *testing.T) {
 func TestPidStateRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("DATA_DIR", dir)
-	want := pidState{PID: 4242, Port: 20128, Host: "0.0.0.0", Binary: "/bin/9router", StartedAt: "2026-10-23T00:00:00Z"}
+	want := pidState{PID: 4242, Port: 20128, Host: "0.0.0.0", Binary: "/bin/proxygo", StartedAt: "2026-10-23T00:00:00Z"}
 	if err := writePidState(want); err != nil {
 		t.Fatalf("write: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "9router.pid")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, "proxygo.pid")); err != nil {
 		t.Fatalf("pid file missing: %v", err)
 	}
 	got, ok := readPidState()
@@ -127,7 +127,7 @@ func TestFindServerBinary(t *testing.T) {
 		t.Fatal("missing explicit path should error")
 	}
 	// Env var.
-	t.Setenv("NINEROUTER_SERVER_BIN", binPath)
+	t.Setenv("PROXYGO_SERVER_BIN", binPath)
 	got, err = findServerBinary("")
 	if err != nil || got != binPath {
 		t.Fatalf("env: got=%q err=%v", got, err)
@@ -148,7 +148,7 @@ func TestStopAndStatusWhenNotRunning(t *testing.T) {
 
 func TestTrayPrintsLimitation(t *testing.T) {
 	t.Setenv("DATA_DIR", t.TempDir())
-	t.Setenv("NINEROUTER_SERVER_BIN", filepath.Join(t.TempDir(), "missing-server"))
+	t.Setenv("PROXYGO_SERVER_BIN", filepath.Join(t.TempDir(), "missing-server"))
 	// Tray must state the limitation before anything else; the start
 	// then fails (no server binary in this env) which is fine here.
 	var out, errBuf bytes.Buffer

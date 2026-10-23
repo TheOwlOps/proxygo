@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/selfupdate"
+	"proxygo/internal/selfupdate"
 )
 
 // Update check. The JS checks the npm registry
@@ -20,7 +20,7 @@ import (
 // failure (offline, timeout, bad payload) silently means "no update";
 // --skip-update skips the check entirely.
 
-var updateReleaseURL = "https://api.github.com/repos/decolua/9router/releases/latest"
+var updateReleaseURL = "https://api.github.com/repos/TheOwlOps/proxygo/releases/latest"
 
 var updateHTTPClient = &http.Client{Timeout: 3 * time.Second}
 
@@ -32,7 +32,7 @@ func latestReleaseVersion() string {
 		return ""
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "9router-cli/"+Version)
+	req.Header.Set("User-Agent", "proxygo-cli/"+Version)
 	resp, err := updateHTTPClient.Do(req)
 	if err != nil {
 		return ""
@@ -54,7 +54,7 @@ func latestReleaseVersion() string {
 	return strings.TrimPrefix(strings.TrimSpace(data.TagName), "v")
 }
 
-// cmdUpdate implements `9router-cli update` (Feature F5): check the
+// cmdUpdate implements `proxygo-cli update` (Feature F5): check the
 // GitHub Releases feed via internal/selfupdate and, when a newer
 // release ships an asset for this platform, download it (sha256-
 // verified against the release's checksums.txt when present) and
@@ -112,12 +112,12 @@ func cmdUpdate(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
-const updateHelp = `Usage: 9router-cli update [--server <path>]
+const updateHelp = `Usage: proxygo-cli update [--server <path>]
 
-Check GitHub Releases for a newer 9router and replace the server
+Check GitHub Releases for a newer ProxyGo and replace the server
 binary in place (sha256-verified when the release has checksums.txt).
 The server binary is located with the usual chain: --server, then
-$NINEROUTER_SERVER_BIN, a sibling binary, PATH, <dataDir>/bin.
+$PROXYGO_SERVER_BIN, a sibling binary, PATH, <dataDir>/bin.
 `
 
 // newerVersionAvailable reports the newer version, if any.

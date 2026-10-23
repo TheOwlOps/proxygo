@@ -16,7 +16,7 @@ import (
 // keychain, Windows certutil Root store, Linux distro CA dirs +
 // NSS databases (Firefox/Chromium).
 
-const rootCACN = "9Router MITM Root CA"
+const rootCACN = "ProxyGo MITM Root CA"
 
 var linuxCADirs = []struct {
 	dir string
@@ -59,10 +59,10 @@ func CheckCertInstalled(certPath string) bool {
 	default:
 		// Debian/Ubuntu: installed file under the CA dir + bundle grep.
 		for _, d := range linuxCADirs {
-			if _, err := os.Stat(filepath.Join(d.dir, "9router-mitm.crt")); err == nil {
+			if _, err := os.Stat(filepath.Join(d.dir, "proxygo-mitm.crt")); err == nil {
 				return true
 			}
-			if _, err := os.Stat(filepath.Join(d.dir, "9router-mitm.pem")); err == nil {
+			if _, err := os.Stat(filepath.Join(d.dir, "proxygo-mitm.pem")); err == nil {
 				return true
 			}
 		}
@@ -98,7 +98,7 @@ func InstallCert(sudoPassword, certPath string) error {
 		if target == nil {
 			return fmt.Errorf("no supported CA directory found")
 		}
-		dst := filepath.Join(target.dir, "9router-mitm.crt")
+		dst := filepath.Join(target.dir, "proxygo-mitm.crt")
 		cmd := fmt.Sprintf("cp %s %s && %s", shellQuote(certPath), shellQuote(dst), target.cmd)
 		if err := ExecWithPassword(cmd, sudoPassword); err != nil {
 			return err
@@ -125,7 +125,7 @@ func UninstallCert(sudoPassword, certPath string) error {
 		return nil
 	default:
 		for _, d := range linuxCADirs {
-			dst := filepath.Join(d.dir, "9router-mitm.crt")
+			dst := filepath.Join(d.dir, "proxygo-mitm.crt")
 			if _, err := os.Stat(dst); err == nil {
 				_ = ExecWithPassword(fmt.Sprintf("rm -f %s && %s", shellQuote(dst), d.cmd), sudoPassword)
 			}

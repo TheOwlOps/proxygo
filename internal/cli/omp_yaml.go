@@ -7,7 +7,7 @@ import (
 
 // Oh My Pi models.yml handling. The JS uses confbox (full YAML); the
 // Go port treats the file as text and surgically replaces/removes
-// only the providers.9router block by indentation — other providers
+// only the providers.proxygo block by indentation — other providers
 // and comments survive byte-for-byte (the same text-op approach the
 // dashboard port uses for Hermes YAML in internal/api/clitools.go).
 
@@ -107,16 +107,16 @@ func ompUnscalar(s string) string {
 	return s
 }
 
-// ompRead9Router extracts the providers.9router scalar values
+// ompReadProxyGo extracts the providers.proxygo scalar values
 // (baseUrl, apiKey, discovery.type) from models.yml text.
-func ompRead9Router(text string) map[string]string {
+func ompReadProxyGo(text string) map[string]string {
 	out := map[string]string{}
 	lines := yamlLines(text)
 	hdr, end, ci := ompProviders(lines)
 	if hdr < 0 {
 		return out
 	}
-	at := yamlFindKey(lines, hdr+1, end, ci, "9router")
+	at := yamlFindKey(lines, hdr+1, end, ci, "proxygo")
 	if at < 0 {
 		return out
 	}
@@ -159,7 +159,7 @@ func ompRead9Router(text string) map[string]string {
 func ompBlockLines(pad string, ctx toolCtx) []string {
 	inner := pad + "  "
 	return []string{
-		pad + "9router:",
+		pad + "proxygo:",
 		inner + "baseUrl: " + ompScalar(v1(ctx.BaseURL)),
 		inner + "apiKey: " + ompScalar(ctx.APIKey),
 		inner + "api: openai-completions",
@@ -181,9 +181,9 @@ func joinYAML(lines []string) string {
 	return s + "\n"
 }
 
-// ompApply9Router returns the file text with providers.9router set to
-// the 9router block (replaced in place or inserted).
-func ompApply9Router(text string, ctx toolCtx) string {
+// ompApplyProxyGo returns the file text with providers.proxygo set to
+// the proxygo block (replaced in place or inserted).
+func ompApplyProxyGo(text string, ctx toolCtx) string {
 	lines := yamlLines(text)
 	raws := make([]string, len(lines))
 	for i, l := range lines {
@@ -202,7 +202,7 @@ func ompApply9Router(text string, ctx toolCtx) string {
 		out = append(out, block...)
 		return joinYAML(out)
 	}
-	if at := yamlFindKey(lines, hdr+1, end, ci, "9router"); at >= 0 {
+	if at := yamlFindKey(lines, hdr+1, end, ci, "proxygo"); at >= 0 {
 		_, bEnd := yamlBlockSpan(lines, at)
 		out := append([]string{}, raws[:at]...)
 		out = append(out, block...)
@@ -215,9 +215,9 @@ func ompApply9Router(text string, ctx toolCtx) string {
 	return joinYAML(out)
 }
 
-// ompRemove9Router removes the providers.9router block (and the
+// ompRemoveProxyGo removes the providers.proxygo block (and the
 // providers: header when nothing remains under it).
-func ompRemove9Router(text string) (string, bool) {
+func ompRemoveProxyGo(text string) (string, bool) {
 	lines := yamlLines(text)
 	raws := make([]string, len(lines))
 	for i, l := range lines {
@@ -231,7 +231,7 @@ func ompRemove9Router(text string) (string, bool) {
 	if hdr < 0 {
 		return text, false
 	}
-	at := yamlFindKey(lines, hdr+1, end, ci, "9router")
+	at := yamlFindKey(lines, hdr+1, end, ci, "proxygo")
 	if at < 0 {
 		return text, false
 	}

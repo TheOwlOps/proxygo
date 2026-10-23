@@ -14,22 +14,22 @@ import (
 	"time"
 )
 
-// `9router xai video "<prompt>"` — port of
+// `proxygo xai video "<prompt>"` — port of
 // cli/src/cli/commands/xaiVideo.js: generate a video with Grok Imagine
-// through the LOCAL 9router gateway (POST /v1/videos/generations),
-// poll until done, and download the file. Uses the 9router API key
-// (--api-key or env NINE_ROUTER_API_KEY) and the gateway's public
+// through the LOCAL proxygo gateway (POST /v1/videos/generations),
+// poll until done, and download the file. Uses the proxygo API key
+// (--api-key or env PROXYGO_API_KEY) and the gateway's public
 // /v1/videos routes the same way scripts/xai-video-test.sh does.
 
 var xaiVideoHelp = `
-Usage: 9router xai video "<prompt>" [options]
+Usage: proxygo xai video "<prompt>" [options]
 
-Generate a video with xAI Grok Imagine through the LOCAL 9router gateway.
+Generate a video with xAI Grok Imagine through the LOCAL proxygo gateway.
 
 Examples:
-  9router xai video "a lighthouse at dawn, ocean waves, cinematic"
-  9router xai video "a neon city flyover" --duration 10 --aspect-ratio 16:9
-  9router xai video "animate this" --image ./photo.jpg --output city.mp4
+  proxygo xai video "a lighthouse at dawn, ocean waves, cinematic"
+  proxygo xai video "a neon city flyover" --duration 10 --aspect-ratio 16:9
+  proxygo xai video "animate this" --image ./photo.jpg --output city.mp4
 
 Options:
   --output <path>        Output file (default: grok-video-<timestamp>.mp4)
@@ -39,7 +39,7 @@ Options:
   --resolution <r>       e.g. 720p, 480p
   --image <path|url>     Image to animate (local file or URL)
   --timeout <sec>        Max wait for generation (default: 600)
-  --api-key <key>        9router API key (default: env NINE_ROUTER_API_KEY)
+  --api-key <key>        proxygo API key (default: env PROXYGO_API_KEY)
   --host <host>          Gateway host (default: 127.0.0.1)
   --port <port>          Gateway port (default: 20128)
   -h, --help             Show this help
@@ -65,7 +65,7 @@ func parseXaiVideoArgs(args []string) (xaiOptions, error) {
 	opts := xaiOptions{
 		model:        "xai/grok-imagine-video",
 		timeoutSec:   600,
-		apiKey:       os.Getenv("NINE_ROUTER_API_KEY"),
+		apiKey:       os.Getenv("PROXYGO_API_KEY"),
 		host:         "127.0.0.1",
 		port:         20128,
 		pollInterval: 5000 * time.Millisecond,
@@ -276,7 +276,7 @@ func xaiErrorMessage(res xaiResponse, fallback string, apiKey string) string {
 	}
 	msg = sanitizeText(msg, apiKey)
 	if res.status == 400 && strings.Contains(msg, "No credentials") {
-		msg += "\nHint: connect xAI in the 9router dashboard or check the provider connection."
+		msg += "\nHint: connect xAI in the proxygo dashboard or check the provider connection."
 	}
 	return msg
 }
@@ -397,7 +397,7 @@ func cmdXaiVideo(args []string, stdout, stderr io.Writer) int {
 	create, err := xaiRequest("POST", base+"/v1/videos/generations", payload, opts.apiKey, 60*time.Second, nil)
 	if err != nil {
 		fmt.Fprintf(stderr, "❌ Video generation request failed: %v\n", err)
-		fmt.Fprintln(stderr, "   Is the local 9router gateway running? Start it with: 9router")
+		fmt.Fprintln(stderr, "   Is the local proxygo gateway running? Start it with: proxygo")
 		return 1
 	}
 	if create.status != 200 {
@@ -409,7 +409,7 @@ func cmdXaiVideo(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "❌ Video generation response did not include request_id")
 		return 1
 	}
-	connectionID := create.headers.Get("x-9router-connection-id")
+	connectionID := create.headers.Get("x-proxygo-connection-id")
 	fmt.Fprintf(stdout, "   request_id: %s\n", requestID)
 	fmt.Fprintln(stdout, "⏳ Waiting for xAI to finish rendering…")
 

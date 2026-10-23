@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"9router-go/internal/chatcore"
-	"9router-go/internal/db"
+	"proxygo/internal/chatcore"
+	"proxygo/internal/db"
 )
 
 // fakeChatBreaker implements chatcore.CircuitBreaker + Snapshot() any.

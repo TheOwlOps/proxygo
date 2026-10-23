@@ -1,5 +1,5 @@
 // Package oauthsvc is the Go port of src/lib/oauth/ (constants, providers,
-// services, utils) from 9Router v0.5.104.
+// services, utils) from ProxyGo v0.5.104.
 //
 // Provider OAuth configuration data is NOT hand-copied: it is read from the
 // Phase-1 registry port (internal/providers, Provider.Raw["oauth"]), which
@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"9router-go/internal/providers"
+	"proxygo/internal/providers"
 )
 
 // HTTPClient performs every upstream OAuth call. Tests replace it (and the

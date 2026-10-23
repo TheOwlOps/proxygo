@@ -1,4 +1,4 @@
--- 9Router Go port — schema.
+-- ProxyGo Go port — schema.
 -- Ported faithfully from src/lib/db/schema.js (TABLES, SCHEMA_VERSION = 2),
 -- which is exactly what migrations/001-initial.js applies on a fresh DB
 -- (buildCreateTableSql per table + its indexes). Column order, types,

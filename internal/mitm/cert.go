@@ -57,8 +57,8 @@ func GenerateRootCA() (keyPath, certPath string, err error) {
 	tpl := &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			CommonName:   "9Router MITM Root CA",
-			Organization: []string{"9Router"},
+			CommonName:   "ProxyGo MITM Root CA",
+			Organization: []string{"ProxyGo"},
 			Country:      []string{"US"},
 		},
 		NotBefore:             now,

@@ -53,11 +53,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"9router-go/internal/db"
-	"9router-go/internal/executors"
-	"9router-go/internal/modelcatalog"
-	"9router-go/internal/oauthsvc"
-	"9router-go/internal/providers"
+	"proxygo/internal/db"
+	"proxygo/internal/executors"
+	"proxygo/internal/modelcatalog"
+	"proxygo/internal/oauthsvc"
+	"proxygo/internal/providers"
 )
 
 // RegisterProviders mounts every Team F route.
@@ -709,7 +709,7 @@ func pvTestProxyURL(ctx context.Context, proxyURL string, timeout time.Duration)
 		timeout = 8 * time.Second
 	}
 	start := time.Now()
-	res, err := pvFetch(ctx, http.MethodHead, "https://google.com/", map[string]string{"User-Agent": "9Router"}, nil, timeout, proxyURL)
+	res, err := pvFetch(ctx, http.MethodHead, "https://google.com/", map[string]string{"User-Agent": "ProxyGo"}, nil, timeout, proxyURL)
 	elapsed := time.Since(start).Milliseconds()
 	if err != nil {
 		msg := pvFetchErrMessage(err)
@@ -2987,7 +2987,7 @@ func pvOAuthCfg(provider string) *pvOAuthTestCfg {
 		return mk(pvOAuthTestCfg{
 			URL: "https://api.github.com/user", Method: "GET",
 			AuthHeader: "Authorization", AuthPrefix: "Bearer ",
-			ExtraHeaders: map[string]string{"User-Agent": "9Router", "Accept": "application/vnd.github+json"},
+			ExtraHeaders: map[string]string{"User-Agent": "ProxyGo", "Accept": "application/vnd.github+json"},
 		})
 	case "iflow":
 		return mk(pvOAuthTestCfg{
@@ -3402,7 +3402,7 @@ func pvClineHeaders(token string) map[string]string {
 	return map[string]string{
 		"HTTP-Referer":       "https://cline.bot",
 		"X-Title":            "Cline",
-		"User-Agent":         "9Router/" + pvAppVersion,
+		"User-Agent":         "ProxyGo/" + pvAppVersion,
 		"X-PLATFORM":         runtime.GOOS,
 		"X-PLATFORM-VERSION": runtime.Version(),
 		"X-CLIENT-TYPE":      "9router",
@@ -8534,7 +8534,7 @@ func pvPoolDeployDeno(deps Deps) http.HandlerFunc {
 		}
 		createRes, ferr := pvFetchJSON(ctx, "POST", denoAPI+"/apps", headers, map[string]any{
 			"slug":   projectName,
-			"labels": map[string]any{"custom.kind": "9router-relay"},
+			"labels": map[string]any{"custom.kind": "proxygo-relay"},
 			"config": map[string]any{
 				"install": "deno install",
 				"runtime": map[string]any{"type": "dynamic", "entrypoint": "main.ts"},
@@ -8667,7 +8667,7 @@ const pvNetlifyRelayCode = `exports.handler = async (event) => {
 };
 `
 
-const pvNetlifyIndexHTML = "<!doctype html>\n<html><head><meta charset=\"utf-8\"><title>9Router Relay</title></head>\n<body><p>9Router relay function lives at <code>/.netlify/functions/relay</code>.</p></body></html>\n"
+const pvNetlifyIndexHTML = "<!doctype html>\n<html><head><meta charset=\"utf-8\"><title>ProxyGo Relay</title></head>\n<body><p>ProxyGo relay function lives at <code>/.netlify/functions/relay</code>.</p></body></html>\n"
 
 var pvNetlifyNameRe = regexp.MustCompile(`[^a-z0-9-]`)
 var pvNetlifyDashRe = regexp.MustCompile(`-+`)
@@ -8732,8 +8732,8 @@ func pvPoolDeployNetlify(deps Deps) http.HandlerFunc {
 			return
 		}
 		const netlifyAPI = "https://api.netlify.com/api/v1"
-		authHeaders := map[string]string{"Authorization": "Bearer " + token, "User-Agent": "9Router"}
-		jsonHeaders := map[string]string{"Authorization": "Bearer " + token, "User-Agent": "9Router", "Content-Type": "application/json"}
+		authHeaders := map[string]string{"Authorization": "Bearer " + token, "User-Agent": "ProxyGo"}
+		jsonHeaders := map[string]string{"Authorization": "Bearer " + token, "User-Agent": "ProxyGo", "Content-Type": "application/json"}
 
 		siteRes, ferr := pvFetchJSON(ctx, "POST", netlifyAPI+"/sites", jsonHeaders, map[string]any{"name": siteName}, 0, "")
 		if ferr != nil {
@@ -8800,7 +8800,7 @@ func pvPoolDeployNetlify(deps Deps) http.HandlerFunc {
 				requiredFns[s] = true
 			}
 		}
-		octetHeaders := map[string]string{"Authorization": "Bearer " + token, "User-Agent": "9Router", "Content-Type": "application/octet-stream"}
+		octetHeaders := map[string]string{"Authorization": "Bearer " + token, "User-Agent": "ProxyGo", "Content-Type": "application/octet-stream"}
 		if requiredFiles[indexSHA] {
 			fileRes, uerr := pvFetch(ctx, "PUT", netlifyAPI+"/deploys/"+deployID+"/files/index.html", octetHeaders, []byte(pvNetlifyIndexHTML), 0, "")
 			if uerr != nil {

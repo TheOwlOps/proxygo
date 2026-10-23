@@ -2,7 +2,7 @@
 // proxy that intercepts AI-tool traffic (Antigravity, Copilot, Kiro,
 // Cursor) via /etc/hosts DNS entries pointing at 127.0.0.1 and a locally
 // trusted root CA, rewriting model names through the dashboard's MITM
-// alias map and forwarding chat requests to the 9Router gateway.
+// alias map and forwarding chat requests to the ProxyGo gateway.
 //
 // Public API (used by the cli-tools antigravity-mitm routes, Team I):
 //
@@ -25,7 +25,7 @@ import (
 	"runtime"
 	"strings"
 
-	"9router-go/internal/db"
+	"proxygo/internal/db"
 )
 
 // Dir is $DATA_DIR/mitm (paths.js MITM_DIR).

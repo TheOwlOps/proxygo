@@ -123,8 +123,8 @@ func writeHosts(next, password string) error {
 	if isWindows() {
 		// Atomic swap via temp + backup, mirroring atomicWriteHostsWin.
 		target := hostsFile()
-		tmpNew := target + ".9router.new"
-		tmpBak := target + ".9router.bak"
+		tmpNew := target + ".proxygo.new"
+		tmpBak := target + ".proxygo.bak"
 		if err := os.WriteFile(tmpNew, []byte(next), 0o644); err != nil {
 			return err
 		}
