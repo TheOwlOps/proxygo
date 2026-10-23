@@ -1,3 +1,13 @@
+---
+title: Proxygo
+emoji: ⚡
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 9Router — Go port
 
 Backend rewritten in Go (module `9router-go`, Go 1.23, single binary);
