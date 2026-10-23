@@ -1,0 +1,6 @@
+/9router
+/9router-cli
+*.exe
+*.db
+/data/
+.DS_Store
