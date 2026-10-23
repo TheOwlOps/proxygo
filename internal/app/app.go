@@ -632,6 +632,36 @@ func NewService(store *db.Store) *chatcore.Service {
 	}
 	svc.BodyGuard = NewPIIGuard(nationalID)
 	svc.KeyLimiter = KeyLimiterImpl(store)
+	// Usage recording (JS saveUsageStats + saveRequestDetail): every
+	// finished chat attempt lands in usageHistory (drives the Usage
+	// dashboard, quota tracking and the F3 per-key budgets) and, when
+	// observability is enabled in settings, in requestDetails.
+	svc.UsageSink = func(ev chatcore.UsageEvent) {
+		ts := ev.Timestamp.UTC().Format("2006-01-02T15:04:05.000Z")
+		tokens := db.Record{"prompt_tokens": ev.PromptTokens, "completion_tokens": ev.CompletionTokens}
+		histStatus := "ok"
+		detailStatus := "success"
+		if ev.Status == "error" {
+			histStatus = "error"
+			detailStatus = "error"
+		}
+		_ = store.SaveRequestUsage(db.Record{
+			"timestamp": ts, "provider": ev.Provider, "model": ev.Model,
+			"connectionId": ev.ConnectionID, "apiKey": ev.APIKey,
+			"endpoint": ev.Endpoint, "status": histStatus, "tokens": tokens,
+		})
+		detail := db.Record{
+			"provider": ev.Provider, "model": ev.Model, "connectionId": ev.ConnectionID,
+			"timestamp": ts, "status": detailStatus,
+			"latency": db.Record{"ttft": ev.TTFTMs, "total": ev.TotalMs},
+			"tokens":  tokens,
+			"request": db.Record{"body": ev.RequestBody},
+		}
+		if ev.ResponseBody != nil {
+			detail["response"] = ev.ResponseBody
+		}
+		_ = store.SaveRequestDetail(detail)
+	}
 	return svc
 }
 

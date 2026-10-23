@@ -297,9 +297,13 @@ type Service struct {
 	BodyGuard  BodyGuard
 	Breaker    CircuitBreaker
 	KeyLimiter KeyLimiter
-	Settings   SettingsSource
-	Keys       APIKeyValidator
-	KeyAccess  KeyAccessEnforcer
+	// UsageSink receives one UsageEvent per finished attempt
+	// (usage recording — the JS saveUsageStats/saveRequestDetail
+	// pair). Nil disables recording entirely.
+	UsageSink func(UsageEvent)
+	Settings  SettingsSource
+	Keys      APIKeyValidator
+	KeyAccess KeyAccessEnforcer
 	// BypassCheck ports utils/bypassHandler.js handleBypassRequest
 	// (warmup/title-generation short-circuits); nil = no bypasses.
 	BypassCheck func(body map[string]any, model, userAgent string, ccFilterNaming bool) *http.Response
@@ -560,6 +564,7 @@ func (s *Service) handleSingleModel(ctx context.Context, req ChatRequest, modelS
 			cred = refreshed
 		}
 
+		attemptStart := time.Now()
 		outcome := s.core(ctx, req, info, model, cred)
 		if s.Breaker != nil && cred.ConnectionID != "" {
 			// Success = the upstream answered with no transport error
@@ -572,6 +577,10 @@ func (s *Service) handleSingleModel(ctx context.Context, req ChatRequest, modelS
 		}
 		if outcome.success {
 			s.Accounts.ClearError(cred, model)
+			if outcome.response != nil && outcome.response.Body != nil {
+				outcome.response.Body = s.recordUsageTap(req, provider, model, cred.ConnectionID,
+					outcome.response.Body, outcome.response.Header.Get("Content-Type"), attemptStart)
+			}
 			return outcome.response, nil
 		}
 
@@ -586,6 +595,9 @@ func (s *Service) handleSingleModel(ctx context.Context, req ChatRequest, modelS
 			}
 			continue
 		}
+		// Terminal failure for this account with no fallback: record
+		// the failed attempt (JS records it as a request detail too).
+		s.recordUsageError(req, provider, model, cred.ConnectionID, attemptStart)
 		return outcome.response, nil
 	}
 }

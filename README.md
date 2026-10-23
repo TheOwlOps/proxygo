@@ -8,128 +8,166 @@ app_port: 7860
 pinned: false
 ---
 
-# 9Router — Go port
+# proxygo — 9Router, rewritten in Go
 
-Backend rewritten in Go (module `9router-go`, Go 1.23, single binary);
-the React dashboard is unchanged and served as static files by the Go
-server (`WEB_DIR`). Port plan: `docs/CONVERSION_PLAN.md`; binding package
-contract: `docs/GO_CONTRACT.md`.
+A complete Go port of [9Router](https://github.com/decolua/9router)
+v0.5.104: the AI router that fronts 100+ providers behind one
+OpenAI-compatible endpoint. The Go backend is a single static binary;
+the original React dashboard is kept as-is and served by the Go
+server as static files.
 
-## Run
+Every screenshot below is a real capture of this Go build running
+with its dashboard — no mockups.
+
+![Endpoint & API keys](docs/screenshots/dashboard.png)
+
+## Screenshots
+
+**Login** — password gate for the dashboard (default password
+`123456` on first run; you are asked to change it).
+
+![Login](docs/screenshots/login.png)
+
+**Providers** — 137 provider definitions: OAuth tools (Claude Code,
+Codex, Copilot, Cursor, Kiro…), API-key providers, free tiers, and
+custom OpenAI/Anthropic-compatible endpoints with live model
+discovery.
+
+![Providers](docs/screenshots/providers.png)
+
+**Usage & analytics** — every request is recorded (tokens, cost,
+latency, request details) and charted per provider, model and key.
+
+![Usage](docs/screenshots/usage.png)
+
+**Combos** — group models under one name with fallback, round-robin
+or fusion strategies, plus the vision/audio capacity adapters.
+
+![Combos](docs/screenshots/combos.png)
+
+**Basic Chat** — a built-in chat client on top of your own routed
+models, streaming included.
+
+![Basic Chat](docs/screenshots/basic-chat.png)
+
+**Playground** (`/playground`, Go addition) — test any of the 1,133
+models with your API key, watch latency and token stats per reply…
+
+![Playground](docs/screenshots/playground.png)
+
+…or race two models side by side in compare mode and see the winner
+by speed and by tokens.
+
+![Playground compare mode](docs/screenshots/playground-compare.png)
+
+## Run it
 
 ```bash
-# Linux/macOS
-export PATH=$HOME/tools/go/bin:$PATH   # if Go is installed under ~/tools
 go build -o 9router ./cmd/9router
 PORT=20128 ./9router
 ```
 
 ```powershell
 # Windows (PowerShell)
-go build -o 9router.exe ./cmd/9router
+go build -o 9router.exe .\cmd\9router
 $env:PORT=20128; .\9router.exe
 ```
 
-First-run shortcut (seeds an `openai` connection when the DB is empty):
+- Dashboard + API on the same port. Point `WEB_DIR` at a built
+  dashboard directory to serve the React UI (without it the server
+  still answers the full API surface plus `/playground`).
+- Data lives in SQLite at `$DATA_DIR/db/data.sqlite`
+  (default `~/.9router`), schema-compatible with the original
+  `src/lib/db`; a legacy `db.json` is imported once, automatically.
+- First-run shortcut: start with `UPSTREAM_API_KEY=sk-...` to seed
+  an `openai` connection on an empty database.
+- API surface: `GET /health`, `GET /v1/models`,
+  `POST /v1/chat/completions` · `/v1/messages` · `/v1/responses`,
+  plus the full dashboard API under `/api/*`.
+- Custom endpoints work exactly like the original: create an
+  `openai-compatible-*` / `anthropic-compatible-*` node, add a
+  connection, and its models are discovered live from the endpoint.
 
-```bash
-UPSTREAM_API_KEY=sk-... ./9router
-```
+CLI companion (`cmd/9router-cli`): start/stop/status/open,
+connect CLI tools (Claude Code, Codex, Copilot, Cline…), `show`,
+`xai video`, `update`, and a Windows system tray.
 
-Endpoints: `GET /health`, `GET /v1/models`,
-`POST /v1/chat/completions` · `/v1/messages` · `/v1/responses`.
-Data lives in SQLite at `$DATA_DIR/db/data.sqlite` (default `~/.9router/`),
-schema-compatible with the original `src/lib/db`.
+## What was ported
 
-Custom endpoints work exactly like the original: create a provider
-connection for `openai-compatible-<name>` / `anthropic-compatible-<name>`
-with `providerSpecificData.baseUrl` pointing at your endpoint.
+| Area | Coverage |
+|---|---|
+| Provider registry | 137/137 providers, 1,133 models, aliases |
+| Model catalog + pricing | 1,155 entries / 112 providers, wired into cost accounting |
+| Translators | OpenAI ↔ Claude / Gemini / Responses, Kiro (all directions), Cursor — request, body and stream |
+| Database | Real SQLite (pure Go, no cgo), 11 tables / 11 repos, `db.json` import |
+| Executors | Default + all special executors incl. Kiro EventStream, Bedrock SigV4, Cursor HTTP/2 + hand-rolled protobuf, and all 14 bespoke web/session executors |
+| Chat core | Account/combo fallback, cooldowns, token refresh, SSE, RTK token saver, usage recording, request details |
+| Dashboard API | Auth/settings/keys/pricing/version, providers/nodes/combos/models/tags/proxy-pools (with Cloudflare/Deno/Netlify/Vercel deploys), usage/translator/media/MCP/headroom/pxpipe/tunnel ops |
+| OAuth / SSO | Engine for 28 providers (auth-code, device-code, refresh), OIDC (PKCE + JWKS), SAML with real XMLDSig signature verification |
+| Tunnels / MITM | Cloudflare quick tunnels, Tailscale; root CA + TLS intercept incl. the Kiro intercept |
+| Per-provider usage fetchers | 29/29 ported |
 
-## Status (2026-10-23)
+## Feature Pack 1+3 (Go-only additions)
 
-Phase 1 + Phase 2 + the gap-closing round + Feature Pack 1+3
-complete and verified (`go vet ./...` clean, `go test ./...` — all
-20 packages PASS, `GOOS=windows go build ./...` green, live binary
-smoke-tested: health, 1,133 models, login flow, keys CRUD, OAuth
-authorize URL, usage stats, a real per-provider usage fetch, pxpipe
-status/health, and every Feature Pack behavior above). ~85,600
-lines of Go + ~16,600 lines of tests across 219 Go files.
+All opt-in via dashboard settings, default off, zero behavior change
+when off:
 
-- `internal/providers` — 137/137 registries extracted (1,133 models)
-- `internal/modelcatalog` — 1,155 model entries / 112 providers +
-  pricing (127 canonical + 112 overrides + 51 patterns), wired live
-- `internal/translator` — OpenAI↔Claude/Gemini/Responses + Kiro (all
-  directions) + Cursor request, request+body+stream
-- `internal/db` — real SQLite (modernc, no cgo), 11 tables, 11 repos,
-  legacy `db.json` → SQLite one-time import
-- `internal/executors` + `internal/chatcore` — default + special
-  executors (Kiro EventStream, Bedrock SigV4, CommandCode NDJSON,
-  Cursor HTTP/2 + hand-rolled protobuf…), account/combo fallback,
-  token refresh, SSE, RTK token saver
-- `internal/api` — the full dashboard API surface: auth/settings/keys/
-  pricing/version, providers/nodes/combos/models/tags/proxy-pools
-  (incl. Cloudflare/Deno/Netlify/Vercel deploys), OAuth + OIDC/SAML
-  SSO, cli-tools config writers for ~19 tools, usage/translator/
-  media/MCP/headroom/pxpipe/tunnel ops
-- `internal/oauthsvc` — OAuth engine for 28 providers (auth-code,
-  device-code, refresh), callback proxy, auto-import readers
-- `internal/tunnel` — Cloudflare quick tunnels + Tailscale
-- `internal/mitm` — root CA, hosts/DNS management, TLS intercept
-  server on :443
-- `internal/cli` + `cmd/9router-cli` — launcher (start/stop/status/
-  open/version/reset-password/connect/show/xai video; tray stubbed)
-- `internal/app` + `internal/server` — wiring, HTTP surface, static UI
+- **Response cache** — byte-level replay (SSE included), LRU + TTL,
+  `x-9router-no-cache: 1` bypass, `GET /api/cache/stats`,
+  `POST /api/cache/clear`
+- **Circuit breaker** — per-connection failure threshold with
+  half-open probing, `GET /api/breaker/stats` (HTTP 429 counts as
+  healthy; it is a rate limit, not an outage)
+- **Per-key limits** — RPM plus daily/monthly token and cost budgets
+  per API key (`/api/keys/{id}/limits`), fail-open by design
+- **Playground** — embedded at `/playground`, single + compare mode
+- **Self-update** — checksum-verified binary swap from GitHub
+  Releases (dashboard action and `9router-cli update`); activates
+  when a release publishes `9router-go-<os>-<arch>` assets
+- **PII redaction** — emails, phone numbers, Luhn-validated cards
+  and API keys are masked before prompts leave the server; national
+  IDs behind a separate opt-in
+- **Windows tray** — hand-rolled `Shell_NotifyIcon` tray
+  (Open Dashboard / Start / Stop / Quit), no cgo
 
-SAML SSO login is fully ported including XMLDSig signature
-verification (goxmldsig; assertion- or response-signed, tamper /
-wrong-cert / unsigned responses rejected — covered by tests; not yet
-live-verified against a real IdP).
+Two completions go beyond the upstream source: usage recording is
+wired through the whole chat pipeline (upstream records via the
+same stores), and `POST /api/dashboard/chat/completions` — the route
+the Basic Chat page calls, which upstream v0.5.104 ships without a
+server handler — is implemented here (dashboard-session auth, runs
+under your first active API key).
 
-Feature Pack 1+3 (2026-10-23, Go-only additions — all opt-in via
-settings, default off, no behavior change when off): response cache
-(byte-level replay incl. SSE, LRU + TTL, `GET /api/cache/stats`,
-`POST /api/cache/clear`); per-connection circuit breaker
-(`GET /api/breaker/stats`); per-API-key RPM + daily/monthly
-token/cost budgets (`/api/keys/{id}/limits`, fail-open); embedded
-playground at `/playground` with a two-model compare mode; real
-self-update from GitHub Releases (checksum-verified binary swap,
-dashboard action + `9router-cli update` — activates when a release
-publishes `9router-go-<os>-<arch>` assets); PII redaction of outbound
-prompts (email/phone/Luhn-checked cards/API keys, national ID
-opt-in separately); a hand-rolled Windows system tray
-(Shell_NotifyIcon; compile-verified, not yet run on a real Windows
-desktop). Live-smoke verified against a mock upstream: cache hit
-replay, redacted upstream body, 429 on the 3rd over-RPM request,
-breaker circuit open in stats. See `docs/FEATURE_PACK_13.md`.
+## Verification
 
-Gap-closing round (2026-10-23): all previously documented functional
-gaps are closed — per-provider usage fetchers 29/29; MITM Kiro
-intercept fully ported (incl. the x-request-source anti-loop rule);
-all 14 bespoke web/session executors ported (`executors.NotPorted`
-is empty); pxpipe runs for real as a child process (the npm package
-ships a standalone proxy server on :47821 — `internal/pxpipe`);
-CLI `connect`/`show`/`xai video` ported and the update check reads
-GitHub Releases; provider test-path OAuth refresh, all 9 live model
-resolvers, the Bedrock SigV4 credential probe, the Vercel-relay URL
-rewrite and the models.dev catalog-sync engine are wired; settings
-PATCH side effects (combo-rotation reset, quota AutoPing) and
-OIDC/SAML session-claims parity are in.
+- `go vet ./...` clean; `go test ./...` — **all 20 packages PASS**
+- `GOOS=windows go build ./...` green (server + CLI + tray)
+- Live-smoke tested end to end: login flow, 1,133 models, keys
+  CRUD, OAuth authorize URLs, a real per-provider usage fetch,
+  pxpipe child-process status/health, and every Feature Pack
+  behavior (cache hit replay, redacted upstream body, 429 over the
+  RPM limit, breaker circuit open) against a mock upstream
+- 222 Go files · ~102,800 lines of Go incl. ~16,700 lines of tests ·
+  ~25 MB server binary
 
-Remaining residuals (documented in each package):
-- The Windows tray is implemented but has never run on a real
-  Windows desktop (no GUI environment here) — smoke-test pending.
-- CLI tray on non-Windows platforms remains the detached-start note.
-- The dashboard "update now" action cannot self-update a standalone
-  binary the way the JS spawns an npm updater; it exits so an
-  external supervisor/CLI can swap the binary (check is real).
-- pxpipe's transform is not routed through the Go chat pipeline;
-  the proxy runs standalone, as its own dashboard expects.
-- Per-connection proxy options are not applied inside the usage
-  fetchers / AutoPing (they use the default transport).
-- Desktop credential extraction that has no Go equivalent:
-  Xiaomi MiMo passToken from the desktop cookie DB, Zed Windows
-  Credential Manager, Bedrock profile-mode credentials (AWS SDK
-  profile chain) — static keys work everywhere.
+## Known residuals
+
+- The Windows tray is compile-verified but has not yet run on a
+  real Windows desktop (no GUI environment here).
 - The 14 web executors, Cursor and SAML are verified against
-  protocol fixtures generated from the original JS, not against
+  protocol fixtures generated from the original JS — not against
   live provider accounts / a real IdP.
+- pxpipe runs for real as a child process; its transform is not
+  routed through the Go chat pipeline.
+- Per-connection proxy options are not applied inside the usage
+  fetchers / AutoPing.
+- Desktop credential extraction with no Go equivalent: Xiaomi MiMo
+  passToken from the desktop cookie DB, Zed Windows Credential
+  Manager, Bedrock profile-mode credentials — static keys work
+  everywhere.
+
+## Docs
+
+- `docs/CONVERSION_PLAN.md` — the port plan, directory by directory
+- `docs/GO_CONTRACT.md` / `docs/PHASE2_CONTRACT.md` — package
+  contracts used during the port
+- `docs/FEATURE_PACK_13.md` — Feature Pack 1+3 design

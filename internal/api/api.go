@@ -42,6 +42,7 @@ func RegisterAll(mux *http.ServeMux, deps Deps) {
 	RegisterCacheAPI(mux, deps)
 	RegisterBreakerAPI(mux, deps)
 	RegisterKeyLimitsAPI(mux, deps)
+	RegisterDashboardChat(mux, deps)
 }
 
 // ---------- JSON helpers ----------
