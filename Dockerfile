@@ -10,9 +10,11 @@ RUN apk --no-cache add ca-certificates tzdata
 RUN adduser -D -u 1000 appuser
 WORKDIR /app
 COPY --from=builder /app/proxygo .
+COPY --from=builder /app/web ./web
 RUN mkdir -p /app/data && chown -R appuser:appuser /app
 USER appuser
 ENV PORT=7860
 ENV DATA_DIR=/app/data
+ENV WEB_DIR=/app/web
 EXPOSE 7860
 CMD ["./proxygo"]
